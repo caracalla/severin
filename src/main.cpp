@@ -1,3 +1,6 @@
+#include <engine.h>
+#include <renderer.h>
+#include <scene.h>
 #include <util.h>
 #include <window_handler.h>
 
@@ -6,18 +9,23 @@
 
 
 int main(int argc, char* argv[]) {
+	util::init();
+
 	int width = 800;
 	int height = 600;
 
 	WindowHandler window_handler(width, height);
+	Renderer renderer(&window_handler);
 
-	while (window_handler.isRunning()) {
-		window_handler.handleInput();
-		Input::ButtonStates button_states = window_handler.getButtonStates();
-		Input::MouseState mouse_state = window_handler.getMouseState();
+	if (!renderer.init()) {
+		util::log("renderer failed to init");
+		return EXIT_FAILURE;
 	}
 
-	window_handler.cleanup();
+	Scene scene{};
+	Engine engine(&window_handler, &scene, &renderer);
+
+	engine.run();
 
 	util::log("all done");
 

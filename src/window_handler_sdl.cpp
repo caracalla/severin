@@ -3,6 +3,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 
+
+struct SDL_Window* sdl_window{ nullptr };
+
+
 WindowHandler::WindowHandler(int width, int height) :
     _window_width(width),
     _window_height(height) {
@@ -10,7 +14,7 @@ WindowHandler::WindowHandler(int width, int height) :
 
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
 
-	_window = SDL_CreateWindow(
+	sdl_window = SDL_CreateWindow(
 		"Vulkan Engine",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
@@ -25,23 +29,23 @@ WindowHandler::WindowHandler(int width, int height) :
 }
 
 void WindowHandler::cleanup() {
-  SDL_DestroyWindow(_window);
+  SDL_DestroyWindow(sdl_window);
 }
 
 std::vector<const char*> WindowHandler::getRequiredExtensions() {
   unsigned int count;
-	SDL_Vulkan_GetInstanceExtensions(_window, &count, nullptr);
+	SDL_Vulkan_GetInstanceExtensions(sdl_window, &count, nullptr);
 
 	std::vector<const char*> extensions;
 	extensions.resize(count);
 
-	SDL_Vulkan_GetInstanceExtensions(_window, &count, extensions.data());
+	SDL_Vulkan_GetInstanceExtensions(sdl_window, &count, extensions.data());
 
 	return extensions;
 }
 
 bool WindowHandler::createSurface(VkInstance instance, VkSurfaceKHR* surface) {
-  SDL_bool result = SDL_Vulkan_CreateSurface(_window, instance, surface);
+  SDL_bool result = SDL_Vulkan_CreateSurface(sdl_window, instance, surface);
 
   return result == SDL_TRUE;
 }
