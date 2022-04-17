@@ -9,7 +9,7 @@ namespace util {
 	void log(const char* fmt, ...);
 	void logError(const char* fmt, ...);
 
-	void logFrameStats(std::chrono::nanoseconds last_frame_duration_ns);
+	void logFrameStats(std::chrono::microseconds last_frame_duration);
 	bool shouldLog();
 
 	void init();
