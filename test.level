@@ -1,0 +1,17 @@
+# file format:
+
+# player info (position, rotation)
+0.0 0.0 0.0
+
+# assets base directory
+assets/
+
+# entities: model, then list of entities using that model
+# model format: model_file_name (texture_file_name)
+m large_buildingE.obj
+# entity format: position.xyz rotation.xyz scale
+e 0.0 0.0 -10.0 0.0 0.0 0.0 10.0
+e 2.0 0.0 -10.0 0.0 0.0 0.0 1.0
+e 4.0 0.0 -10.0 0.0 0.0 0.0 1.0
+e 6.0 0.0 -10.0 0.0 0.0 0.0 1.0
+e 8.0 0.0 -10.0 0.0 0.0 0.0 1.0

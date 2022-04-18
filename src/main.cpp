@@ -14,11 +14,18 @@ int main(int argc, char* argv[]) {
 	int width = kDefaultWindowWidth;
 	int height = kDefaultWindowHeight;
 
-	if (argc == 3) {
-		width = atoi(argv[1]);
-		height = atoi(argv[2]);
+	// input arg parsing
+	if (argc > 1) {
+		if (argc == 3) {
+			width = atoi(argv[1]);
+			height = atoi(argv[2]);
+		} else {
+			printf("usage: severin [window_width window_height]\n");
+			return EXIT_SUCCESS;
+		}
 	}
 
+	// setup
 	WindowHandler window_handler(width, height);
 	Renderer renderer(&window_handler);
 
@@ -30,6 +37,7 @@ int main(int argc, char* argv[]) {
 	Scene scene{};
 	Engine engine(&window_handler, &scene, &renderer);
 
+	// load level
 	std::string level_file = "test.level";
 
 	if (!engine.loadLevelFile(level_file)) {
@@ -37,6 +45,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	// let's go!
 	engine.run();
 
 	util::log("all done");
