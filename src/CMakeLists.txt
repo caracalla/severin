@@ -8,11 +8,10 @@ add_executable(severin
   engine.h
   engine.cpp
   scene.h
-  renderer.h
-  renderer.cpp)
+  renderer.h)
 
 target_include_directories(severin PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(severin glm)
+target_link_libraries(severin vkbootstrap vma glm tinyobjloader stb)
 
 target_link_libraries(severin Vulkan::Vulkan sdl2)

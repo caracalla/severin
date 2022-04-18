@@ -4,9 +4,11 @@ project("severin")
 
 set(CMAKE_CXX_STANDARD 17)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Debug)
-endif()
+# if(NOT CMAKE_BUILD_TYPE)
+#   set(CMAKE_BUILD_TYPE Debug)
+# endif()
+
+set(CMAKE_CXX_FLAGS "-Wno-nullability-completeness") # vk_mem_alloc.h
 
 find_package(Vulkan REQUIRED)
 
