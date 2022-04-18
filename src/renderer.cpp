@@ -3,12 +3,12 @@
 
 
 bool Renderer::init() {
-  util::log("vulkan");
-  return true;
+	util::log("vulkan");
+	return true;
 }
 
 void Renderer::draw(Scene* scene) {
-  // draw
+	// draw
 }
 
 void Renderer::cleanup() {}

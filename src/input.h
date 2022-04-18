@@ -8,7 +8,7 @@ namespace Input {
 		bool right = false;
 		bool rise = false;
 		bool fall = false;
-    bool action = false;
+		bool action = false;
 		bool turn = false; // remove
 	};
 

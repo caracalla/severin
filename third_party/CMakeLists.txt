@@ -1,8 +1,39 @@
 find_package(Vulkan REQUIRED)
 
+# glm
 add_library(glm INTERFACE)
 target_include_directories(glm INTERFACE glm)
 
+# vma
+add_library(vma INTERFACE)
+target_include_directories(vma INTERFACE vma)
+
+# stb
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE stb)
+
+# tinyobjloader
+add_library(tinyobjloader STATIC)
+
+target_sources(tinyobjloader PRIVATE
+    tinyobjloader/tiny_obj_loader.h
+    tinyobjloader/tiny_obj_loader.cc
+    )
+
+target_include_directories(tinyobjloader PUBLIC tinyobjloader)
+
+# vk-bootstrap
+add_library(vkbootstrap STATIC)
+
+target_sources(vkbootstrap PRIVATE
+    vk-bootstrap/VkBootstrap.h
+    vk-bootstrap/VkBootstrap.cpp
+    )
+target_include_directories(vkbootstrap PUBLIC vk-bootstrap)
+
+target_link_libraries(vkbootstrap PUBLIC Vulkan::Vulkan $<$<BOOL:UNIX>:${CMAKE_DL_LIBS}>)
+
+# sdl2
 add_library(sdl2 INTERFACE)
 set(sdl2_DIR "SDL_PATH" CACHE PATH "/opt/homebrew/Cellar/sdl2/2.0.16")
 

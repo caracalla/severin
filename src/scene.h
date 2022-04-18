@@ -51,8 +51,8 @@ struct Scene {
 		glm::mat4 y_rotation = glm::rotate(glm::mat4(1.0f), this->player.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::vec4 new_pos = translation * y_rotation;
 
-    player.position.x += new_pos.x;
-    player.position.y += new_pos.y;
-    player.position.z += new_pos.z;
+		player.position.x += new_pos.x;
+		player.position.y += new_pos.y;
+		player.position.z += new_pos.z;
 	}
 };
