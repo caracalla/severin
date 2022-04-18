@@ -5,8 +5,8 @@
 #include <sstream>
 
 
-bool Engine::loadLevelFile(std::string level_filename) {
-	
+bool Engine::loadLevelFile(const std::string& level_filename) {
+	return true;
 }
 
 void Engine::run() {

@@ -3,12 +3,21 @@
 
 
 bool Renderer::init() {
-	util::log("vulkan");
+	// init
 	return true;
 }
 
-void Renderer::draw(Scene* scene) {
+uint16_t Renderer::uploadOBJModel(
+		const std::string& assets_basedir,
+		const std::string& file_name) {
+	// upload
+	return 0;
+}
+
+void Renderer::draw(const Scene* const scene) {
 	// draw
 }
 
-void Renderer::cleanup() {}
+void Renderer::cleanup() {
+	// cleanup
+}

@@ -9,21 +9,41 @@
 #include <vector>
 
 
+struct Entity { // 32 bytes total
+	uint16_t mesh_id; // identifier for geometry
+	uint16_t material_id; // identifier for shading
+	glm::vec3 position; // 12 bytes
+	glm::vec3 rotation; // 12 bytes
+	float scale = 1.0; // 4 bytes
+
+	Entity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale) :
+					mesh_id(mesh_id),
+					material_id(material_id),
+					position(position),
+					rotation(rotation),
+					scale(scale) {}
+};
+
 struct Player {
 	glm::vec3 position;
 	glm::vec3 rotation;
 };
 
 struct Scene {
-	// std::vector<RenderObject> entities;
 	Player player;
+	std::vector<Entity> entities;
 
 	static constexpr float kPlayerMovementIncrement = 0.05;
 
 	void step(
-			std::chrono::microseconds dt,
-			Input::ButtonStates button_states,
-			Input::MouseState mouse_state) {
+			const std::chrono::microseconds dt,
+			const Input::ButtonStates button_states,
+			const Input::MouseState mouse_state) {
 		player.rotation.x += mouse_state.yOffset; // rotation about x axis
 		player.rotation.y += mouse_state.xOffset; // rotation about y axis
 

@@ -18,7 +18,7 @@ struct Engine {
 			_scene(scene),
 			_renderer(renderer) {};
 
-	bool loadLevelFile(std::string filename);
+	bool loadLevelFile(const std::string& filename);
 
 	bool isRunning() {
 		return _window_handler->isRunning();

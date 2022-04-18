@@ -11,7 +11,11 @@ struct Renderer {
 
 	bool init();
 
-	void draw(Scene* scene);
+	uint16_t uploadOBJModel(
+			const std::string& assets_basedir,
+			const std::string& file_name);
+
+	void draw(const Scene* const scene);
 
 	void cleanup();
 };
