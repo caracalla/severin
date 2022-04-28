@@ -7,7 +7,7 @@
 struct Renderer {
 	WindowHandler* _window_handler;
 
-	Renderer(WindowHandler* window_handler) : _window_handler(window_handler) {}
+	Renderer(WindowHandler* window_handler);
 
 	bool init();
 

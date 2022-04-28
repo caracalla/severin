@@ -32,9 +32,10 @@ std::chrono::microseconds max_frame_duration = std::chrono::microseconds(0);
 
 bool should_log = true;
 
-void updateFrameStats(std::chrono::microseconds last_frame_duration) {
-	time_since_last_second += last_frame_duration;
+#define LOG_EXTRA_FRAME_STATS 0
 
+void updateFrameStats(std::chrono::microseconds last_frame_duration) {
+#if LOG_EXTRA_FRAME_STATS
 	if (last_frame_duration < min_frame_duration) {
 		min_frame_duration = last_frame_duration;
 	}
@@ -42,6 +43,9 @@ void updateFrameStats(std::chrono::microseconds last_frame_duration) {
 	if (last_frame_duration > max_frame_duration) {
 		max_frame_duration = last_frame_duration;
 	}
+#endif // LOG_EXTRA_FRAME_STATS
+
+	time_since_last_second += last_frame_duration;
 
 	frame_count += 1;
 
@@ -52,6 +56,9 @@ void util::logFrameStats(std::chrono::microseconds last_frame_duration) {
 	updateFrameStats(last_frame_duration);
 
 	if (should_log) {
+		time_since_last_second = std::chrono::microseconds(0);
+
+#if LOG_EXTRA_FRAME_STATS
 		double average_frame_time = time_since_last_second.count() / frame_count;
 
 		log(
@@ -61,12 +68,13 @@ void util::logFrameStats(std::chrono::microseconds last_frame_duration) {
 				min_frame_duration.count(),
 				max_frame_duration.count());
 
-		// log("FPS: %d", frame_count);
-
-		frame_count = 0;
-		time_since_last_second = std::chrono::microseconds(0);
 		min_frame_duration = std::chrono::microseconds::max();
 		max_frame_duration = std::chrono::microseconds(0);
+#else
+		log("FPS: %d", frame_count);
+#endif // LOG_EXTRA_FRAME_STATS
+
+		frame_count = 0;
 	}
 }
 

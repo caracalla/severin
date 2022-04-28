@@ -5,6 +5,6 @@ A game engine.
 ## Execution
 ```
 cmake .
-make
+make && make Shaders
 bin/severin
 ```
