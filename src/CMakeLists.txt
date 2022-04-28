@@ -7,6 +7,8 @@ add_executable(severin
   window_handler_sdl.cpp
   engine.h
   engine.cpp
+  model.h
+  model.cpp
   scene.h
   renderer.h)
 

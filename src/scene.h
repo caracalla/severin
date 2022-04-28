@@ -49,23 +49,23 @@ struct Scene {
 
 		glm::vec4 translation{};
 
-		if (button_states.forward) {
-			translation.z += kPlayerMovementIncrement;
-		}
-		if (button_states.reverse) {
+		if (button_states.forward) { // player moves DOWN x to go forward
 			translation.z -= kPlayerMovementIncrement;
 		}
-		if (button_states.left) {
-			translation.x += kPlayerMovementIncrement;
+		if (button_states.reverse) {
+			translation.z += kPlayerMovementIncrement;
 		}
 		if (button_states.right) {
+			translation.x += kPlayerMovementIncrement;
+		}
+		if (button_states.left) {
 			translation.x -= kPlayerMovementIncrement;
 		}
 		if (button_states.rise) {
-			translation.y -= kPlayerMovementIncrement;
+			translation.y += kPlayerMovementIncrement;
 		}
 		if (button_states.fall) {
-			translation.y += kPlayerMovementIncrement;
+			translation.y -= kPlayerMovementIncrement;
 		}
 
 		glm::mat4 y_rotation = glm::rotate(glm::mat4(1.0f), this->player.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));

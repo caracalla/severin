@@ -1,7 +1,7 @@
 # file format:
 
 # player info (position, rotation)
-0.0 0.0 0.0
+0.0 0.0 10.0
 
 # assets base directory
 assets/
@@ -10,8 +10,16 @@ assets/
 # model format: model_file_name (texture_file_name)
 m large_buildingE.obj
 # entity format: position.xyz rotation.xyz scale
-e 0.0 0.0 -10.0 0.0 0.0 0.0 10.0
-e 2.0 0.0 -10.0 0.0 0.0 0.0 1.0
-e 4.0 0.0 -10.0 0.0 0.0 0.0 1.0
-e 6.0 0.0 -10.0 0.0 0.0 0.0 1.0
-e 8.0 0.0 -10.0 0.0 0.0 0.0 1.0
+e 0.0 0.0 -10.0 0.0 0.0 0.0 1.0
+e 2.2 0.0 -10.0 0.0 0.0 0.0 1.0
+e 4.4 0.0 -10.0 0.0 0.0 0.0 1.0
+e 6.6 0.0 -10.0 0.0 0.0 0.0 1.0
+e 8.8 0.0 -10.0 0.0 0.0 0.0 1.0
+
+# hexahedron format: min.xyz max.xyz
+h -10.0 -5.0 -10.0 10.0 0 10.0
+
+# axis pointers
+# h 0.0 0.0 0.0 5.0 0.1 0.1
+# h 0.0 0.0 0.0 0.1 5.0 0.1
+# h 0.0 0.0 0.0 0.1 0.1 5.0

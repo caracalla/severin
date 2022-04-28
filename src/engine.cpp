@@ -1,5 +1,7 @@
 #include <engine.h>
 
+#include <model.h>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -62,7 +64,8 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 					return false;
 				}
 
-				last_model_id = _renderer->uploadOBJModel(assets_basedir, model_file_name);
+				Model model = Model::createFromOBJ(assets_basedir, model_file_name);
+				last_model_id = _renderer->uploadModel(std::move(model));
 			} else if (identifier == 'e') {
 				// entity
 				glm::vec3 entity_pos;
@@ -84,6 +87,31 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 						entity_pos,
 						entity_rot,
 						entity_scale);
+			} else if (identifier == 'h') {
+				// entity
+				glm::vec3 hex_min;
+				glm::vec3 hex_max;
+				glm::vec3 hex_pos = glm::vec3(0.0); // boxes are always at 0 for now
+				glm::vec3 hex_rot = glm::vec3(0.0);
+				float hex_scale = 1.0;
+
+				if (
+						!(
+								line_stream >> hex_min.x >> hex_min.y >> hex_min.z
+										>> hex_max.x >> hex_max.y >> hex_max.z)) {
+					util::logError("hexahedron info improperly formatted: %s", line.c_str());
+					return false;
+				}
+
+				Model model = Model::createHexahedron(hex_min, hex_max);
+				uint16_t model_id = _renderer->uploadModel(model);
+
+				_scene->entities.emplace_back(
+						model_id,
+						default_material_id,
+						hex_pos,
+						hex_rot,
+						hex_scale);
 			} else {
 				util::logError("what in the world is this? %s", line.c_str());
 				return false;

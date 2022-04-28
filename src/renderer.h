@@ -1,5 +1,6 @@
 #pragma once
 
+#include <model.h>
 #include <scene.h>
 #include <window_handler.h>
 
@@ -11,9 +12,7 @@ struct Renderer {
 
 	bool init();
 
-	uint16_t uploadOBJModel(
-			const std::string& assets_basedir,
-			const std::string& file_name);
+	uint16_t uploadModel(const Model model);
 
 	void draw(const Scene* const scene);
 
