@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 
 bool Engine::loadLevelFile(const std::string& level_filename) {
@@ -51,6 +52,19 @@ void Engine::run() {
 		// get frame duration
 		steady_clock::time_point frame_end = steady_clock::now();
 		microseconds frame_duration = duration_cast<microseconds>(frame_end - frame_start);
+
+		// lock frame rate at 60 FPS
+		constexpr std::chrono::microseconds kMinFrameTime(16000);
+
+		if (frame_duration < kMinFrameTime) {
+			auto sleep_time = kMinFrameTime - frame_duration;
+
+			std::this_thread::sleep_for(sleep_time);
+
+			frame_end = steady_clock::now();
+			frame_duration = duration_cast<microseconds>(frame_end - frame_start);
+		}
+
 		frame_start = frame_end;
 
 		util::logFrameStats(frame_duration);

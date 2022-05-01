@@ -56,8 +56,6 @@ void util::logFrameStats(std::chrono::microseconds last_frame_duration) {
 	updateFrameStats(last_frame_duration);
 
 	if (should_log) {
-		time_since_last_second = std::chrono::microseconds(0);
-
 #if LOG_EXTRA_FRAME_STATS
 		double average_frame_time = time_since_last_second.count() / frame_count;
 
@@ -75,6 +73,7 @@ void util::logFrameStats(std::chrono::microseconds last_frame_duration) {
 #endif // LOG_EXTRA_FRAME_STATS
 
 		frame_count = 0;
+		time_since_last_second = std::chrono::microseconds(0);
 	}
 }
 
