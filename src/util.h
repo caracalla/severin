@@ -17,6 +17,7 @@ namespace util {
 	float randomFloat(float lower_bound, float upper_bound);
 	int randomInt(int lower_bound, int upper_bound);
 
+	void logVec3(glm::vec3 vec);
 	void logMat4(glm::mat4 mat);
 	float getElapsedTime();
 }

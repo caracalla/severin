@@ -100,6 +100,10 @@ int util::randomInt(int lower_bound, int upper_bound) {
 	return (int)randomFloat(lower_bound, upper_bound);
 }
 
+void util::logVec3(glm::vec3 vec) {
+	printf("    %f, %f, %f\n\n", vec.x, vec.y, vec.y);
+}
+
 void util::logMat4(glm::mat4 mat) {
 	printf("    %f, %f, %f, %f\n", mat[0].x, mat[0].y, mat[0].y, mat[0].w);
 	printf("    %f, %f, %f, %f\n", mat[1].x, mat[1].y, mat[1].y, mat[1].w);

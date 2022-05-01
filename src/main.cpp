@@ -11,14 +11,14 @@
 int main(int argc, char* argv[]) {
 	util::init();
 
-	int width = kDefaultWindowWidth;
-	int height = kDefaultWindowHeight;
+	int window_width = kDefaultWindowWidth;
+	int window_height = kDefaultWindowHeight;
 
 	// input arg parsing
 	if (argc > 1) {
 		if (argc == 3) {
-			width = atoi(argv[1]);
-			height = atoi(argv[2]);
+			window_width = atoi(argv[1]);
+			window_height = atoi(argv[2]);
 		} else {
 			printf("usage: severin [window_width window_height]\n");
 			return EXIT_SUCCESS;
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// setup
-	WindowHandler window_handler(width, height);
+	WindowHandler window_handler(window_width, window_height);
 	Renderer renderer(&window_handler);
 
 	if (!renderer.init()) {
@@ -34,7 +34,9 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	Scene scene{};
+	float aspect_ratio = static_cast<float>(window_width) / window_height;
+	Camera camera(aspect_ratio);
+	Scene scene(camera);
 	Engine engine(&window_handler, &scene, &renderer);
 
 	// load level
