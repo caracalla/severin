@@ -21,7 +21,10 @@ Model Model::createTriangle() {
 	return model;
 }
 
-Model Model::createHexahedron(glm::vec3 box_min, glm::vec3 box_max) {
+Model Model::createHexahedron(float width, float height, float depth) {
+	glm::vec3 box_min(-width / 2, -height / 2, -depth /2);
+	glm::vec3 box_max(width / 2, height / 2, depth /2);
+
 	Model model;
 	// x: -l, +r
 	// y: -b, +t
@@ -136,7 +139,7 @@ Model Model::createFromOBJ(
 	if (!err.empty()) {
 		std::cerr << "Error when loading " << file_path << " OBJ file: " << err << std::endl;
 
-		return Model::createHexahedron(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1));
+		return Model::createHexahedron(2.0f, 2.0f, 2.0f);
 	}
 
 	Model model;
@@ -185,11 +188,8 @@ Model Model::createFromOBJ(
 	}
 
 	// put a small box at the model's "zero point"
-	constexpr float min = -0.01;
-	constexpr float max = 0.01;
-	Model hex = Model::createHexahedron(
-			glm::vec3(min, min, min),
-			glm::vec3(max, max, max));
+	constexpr float size = 0.02f;
+	Model hex = Model::createHexahedron(size, size, size);
 
 	for (const auto& vertex : hex.vertices) {
 		model.vertices.push_back(vertex);

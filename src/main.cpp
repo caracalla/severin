@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	Engine engine(&window_handler, &scene, &renderer);
 
 	// load level
-	std::string level_file = "test.level";
+	std::string level_file = "assets/basic.level";
 
 	if (!engine.loadLevelFile(level_file)) {
 		util::logError("failed to load level %s", level_file.c_str());

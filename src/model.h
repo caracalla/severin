@@ -18,7 +18,7 @@ struct Model {
   std::vector<Vertex> vertices;
 
   static Model createTriangle(); // returns a basic rainbow triangle
-	static Model createHexahedron(glm::vec3 box_min, glm::vec3 box_max); // build a box
+	static Model createHexahedron(float width, float height, float depth); // build a box
 	static Model createFromOBJ(
 			const std::string& asset_basedir,
 			const std::string& file_name);
