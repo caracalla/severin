@@ -88,16 +88,12 @@ void WindowHandler::handleInput() {
 				case SDLK_e:
 					_button_states.fall = true;
 					break;
-				case SDLK_x:
-					_button_states.turn = true;
-					break;
 				case SDLK_ESCAPE:
 					_is_running = false;
 					break;
-				case SDLK_r:
+				case SDLK_LSHIFT:
 					// reset camera
-					// _camera.position = Camera::kDefaultPosition;;
-					// _camera.view = glm::translate(glm::mat4(1.0f), _camera.position);
+					_button_states.change_camera = true;
 					break;
 				default:
 					break;
@@ -124,9 +120,9 @@ void WindowHandler::handleInput() {
 				case SDLK_e:
 					_button_states.fall = false;
 					break;
-				case SDLK_x:
-					_button_states.turn = false;
-					break;
+				case SDLK_LSHIFT:
+					// reset camera
+					_button_states.change_camera = false;
 				default:
 					break;
 			}

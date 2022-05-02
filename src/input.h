@@ -9,7 +9,7 @@ namespace Input {
 		bool rise = false;
 		bool fall = false;
 		bool action = false;
-		bool turn = false; // remove
+		bool change_camera = false; // remove
 	};
 
 	struct MouseState {

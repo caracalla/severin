@@ -38,8 +38,31 @@ struct Level {
   };
 
   struct Fighter {
+		struct Dimensions {
+			float height;
+			float width;
+			float eye_height;
+		};
+
     glm::vec3 position;
     glm::vec3 rotation;
+		Dimensions dimensions;
+		Model model;
+
+		Fighter(Dimensions dims, glm::vec3 pos, glm::vec3 rot) {
+			position = pos;
+			rotation = rot;
+			dimensions = dims;
+
+			glm::vec3 color(0.0f, 0.0f, 1.0f);
+
+			model = Model::createHexahedron(dims.width, dims.height, dims.width, color);
+
+			// stupid hack to put the origin of the model at the bottom
+			for (auto& vertex : model.vertices) {
+				vertex.position.y += dimensions.height / 2;
+			}
+		}
   };
 
   std::vector<Platform> platforms;
@@ -61,8 +84,10 @@ struct Level {
       return level;
 		}
 
-		std::string line;
+		Fighter::Dimensions fighter_dims;
 		bool got_fighter_dimensions = false;
+
+		std::string line;
 
 		while (std::getline(level_file, line)) {
 			if (line.size() == 0 || line[0] == '#') {
@@ -76,7 +101,7 @@ struct Level {
 
 			if (first_char == 'i') {
 				// shared fighter dimensions
-				if (!(line_stream >> level.fighter_height >> level.fighter_width >> level.fighter_eye_height)) {
+				if (!(line_stream >> fighter_dims.height >> fighter_dims.width >> fighter_dims.eye_height)) {
 					logLevelLoadError("fighter shared info improperly formatted!", line);
 					return level;
 				}
@@ -84,18 +109,25 @@ struct Level {
 				got_fighter_dimensions = true;
 			} else if (first_char == 'f') {
 				// a fighter
-				level.fighters.emplace_back();
-				Fighter& fighter = level.fighters.back();
+				if (!got_fighter_dimensions) {
+					logLevelLoadError("need shared fighter info before loading fighters!", line);
+					return level;
+				}
 
-				if (!(line_stream >> fighter.position.x >> fighter.position.y >> fighter.position.z)) {
+				glm::vec3 position;
+				glm::vec3 rotation;
+
+				if (!(line_stream >> position.x >> position.y >> position.z)) {
 					logLevelLoadError("fighter position improperly formatted!", line);
 					return level;
 				}
 
-				if (!(line_stream >> fighter.rotation.x >> fighter.rotation.y >> fighter.rotation.z)) {
+				if (!(line_stream >> rotation.x >> rotation.y >> rotation.z)) {
 					logLevelLoadError("fighter rotation improperly formatted!", line);
 					return level;
 				}
+
+				level.fighters.emplace_back(fighter_dims, position, rotation);
 			} else if (first_char == 'p') {
 				// a platform
 				glm::vec3 start_pos;
@@ -125,11 +157,6 @@ struct Level {
 		
 		 if (level.platforms.size() == 0) {
 			logLevelLoadError("no platforms found in level", level_filename);
-			return level;
-		}
-
-		if (!got_fighter_dimensions) {
-			logLevelLoadError("no fighter dimensions for level", level_filename);
 			return level;
 		}
 

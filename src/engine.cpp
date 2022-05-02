@@ -30,9 +30,29 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 				1.0f); // scale
 	}
 
-	// for now, we only care about the first one
-	Level::Fighter& player = level.fighters[0];
-	_scene->player.position = player.position;
+	// just default to the first fighter as the player for now
+	int player_fighter_num = 0;
+	int player_index = _scene->entities.size() + player_fighter_num;
+
+	for (const auto& fighter : level.fighters) {
+		uint16_t model_id = _renderer->uploadModel(fighter.model);
+		_scene->entities.emplace_back(
+				model_id,
+				default_material_id,
+				fighter.position,
+				fighter.rotation,
+				1.0f); // scale
+	}
+
+	util::log("first fighter index: %d, entity count: %d", player_index, _scene->entities.size());
+
+	_scene->player.entity_index = player_index;
+	_scene->player.eye_height = level.fighters[player_fighter_num].dimensions.eye_height;
+	_scene->player.position = level.fighters[player_fighter_num].position;
+	_scene->player.rotation = level.fighters[player_fighter_num].rotation;
+
+	// I hate this
+	_scene->camera.update(_scene->player.position, _scene->player.rotation);
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 

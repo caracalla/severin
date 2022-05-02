@@ -21,7 +21,7 @@ Model Model::createTriangle() {
 	return model;
 }
 
-Model Model::createHexahedron(float width, float height, float depth) {
+Model Model::createHexahedron(float width, float height, float depth, glm::vec3 base_color) {
 	glm::vec3 box_min(-width / 2, -height / 2, -depth /2);
 	glm::vec3 box_max(width / 2, height / 2, depth /2);
 
@@ -40,7 +40,7 @@ Model Model::createHexahedron(float width, float height, float depth) {
 	glm::vec3 rbr{box_max.x, box_min.y, box_min.z};
 
 	Vertex vertex;
-	glm::vec3 color = glm::vec3(0.8f, 0.0f, 0.8f);
+	glm::vec3 color = base_color * 0.8f;
 
 	auto insertVertex = [&model, &color](glm::vec3 position) {
 		Vertex vertex;
@@ -58,7 +58,7 @@ Model Model::createHexahedron(float width, float height, float depth) {
 	insertVertex(ltf);
 	insertVertex(rtf);
 
-	color = glm::vec3(0.2f, 0.0f, 0.2f);
+	color = base_color * 0.2f;
 
 	// build bottom
 	insertVertex(rbf);
@@ -69,7 +69,9 @@ Model Model::createHexahedron(float width, float height, float depth) {
 	insertVertex(rbr);
 	insertVertex(rbf);
 
-	// build front
+	// build front (actually this is the rear I messed up the z coords)
+	color = base_color * 0.4f;
+
 	insertVertex(rtf);
 	insertVertex(ltf);
 	insertVertex(lbf);
@@ -78,9 +80,9 @@ Model Model::createHexahedron(float width, float height, float depth) {
 	insertVertex(rbf);
 	insertVertex(rtf);
 
-	color = glm::vec3(0.4f, 0.0f, 0.4f);
+	color = glm::vec3(0.4f, 0.0f, 0.0f); // make the front red temporarily
 
-	// build rear
+	// build rear (actually this is the front I messed up the z coords)
 	insertVertex(rtr);
 	insertVertex(rbr);
 	insertVertex(lbr);
@@ -89,7 +91,7 @@ Model Model::createHexahedron(float width, float height, float depth) {
 	insertVertex(ltr);
 	insertVertex(rtr);
 
-	color = glm::vec3(0.6f, 0.0f, 0.6f);
+	color = base_color * 0.6f;
 
 	// build left
 	insertVertex(ltf);

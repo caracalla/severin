@@ -1,10 +1,10 @@
 # shared fighter info
 # height   width   eye height
-i 1.7      0.25    1.5
+i 1.7      0.5    1.5
 
 # list of fighters
 # position       rotation
-f 0.0 0.0 0.0    0.0 0.0 0.0
+f 0.0 0.0 0.0    0.0 0.785 0.0
 
 # platforms   # start position   #end position
 p             -20.0 -5.0 -20.0   20.0 0.0 20.0
