@@ -10,6 +10,7 @@
 #include <vector>
 
 
+// the in-world representation of any object
 struct Entity { // 32 bytes total
 	uint16_t mesh_id; // identifier for geometry
 	uint16_t material_id; // identifier for shading
@@ -30,27 +31,46 @@ struct Entity { // 32 bytes total
 					scale(scale) {}
 };
 
-// this is really just "whatever is being controlled by user input right now"
-struct Player {
-	glm::vec3 position;
-	glm::vec3 rotation;
-	glm::vec3 eye_position; // relative to model origin point
-	int entity_index = 0;
+struct DynamicEntity : public Entity {
+	glm::vec3 velocity;
+
+	DynamicEntity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale) : Entity(mesh_id, material_id, position, rotation, scale) {}
+};
+
+struct PlayableEntity : public DynamicEntity {
+	glm::vec3 eye_position; // relative to model origin point, should be scaled by scale I guess, and rotation-aware (right now only y component is used)
+	glm::vec3 view_rotation;
 
 	static constexpr float kMovementIncrement = 0.05;
-	static constexpr float kSprintFactor = 2;
+	static constexpr float kSprintFactor = 3;
+
+	PlayableEntity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale,
+			glm::vec3 eye_position) :
+					DynamicEntity(mesh_id, material_id, position, rotation, scale),
+					eye_position(eye_position),
+					view_rotation(rotation) {}
 
 	void moveFromInputs(
 			const std::chrono::microseconds dt,
 			const Input::ButtonStates button_states,
 			const Input::MouseState mouse_state) {
 		// apply mouse movement to rotation
-		rotation.x += mouse_state.yOffset; // rotation about x axis
-		rotation.y += mouse_state.xOffset; // rotation about y axis
+		view_rotation.x += mouse_state.yOffset; // rotation about x axis
+		view_rotation.y += mouse_state.xOffset; // rotation about y axis
 
 		// prevent breaking spine
 		float max_x_angle = glm::half_pi<float>();
-		rotation.x = std::clamp(rotation.x, -max_x_angle, max_x_angle);
+		view_rotation.x = std::clamp(view_rotation.x, -max_x_angle, max_x_angle);
 
 		// apply key inputs to motion
 		glm::vec4 translation{};
@@ -81,12 +101,15 @@ struct Player {
 		}
 
 		glm::mat4 y_rotation =
-				glm::rotate(glm::mat4(1.0f), rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+				glm::rotate(glm::mat4(1.0f), view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::vec4 rotated_translation = translation * y_rotation;
 
 		position.x += rotated_translation.x;
 		position.y += rotated_translation.y;
 		position.z += rotated_translation.z;
+
+		// player model should only rotate about the y axis
+		rotation.y = -view_rotation.y;
 	}
 };
 
@@ -119,32 +142,83 @@ struct Camera {
 };
 
 struct Scene {
+	// TODO: limit the size of the entity arrays to this total value
+	static constexpr int kMaxEntities = 4096;
+
+	std::vector<Entity> static_entities;
+	std::vector<DynamicEntity> dynamic_entities;
+	std::vector<PlayableEntity> playable_entities;
+
 	Camera camera;
-	Player player;
-	std::vector<Entity> entities;
+	int player_entity_index = 0;
 
 	Scene(Camera cam) : camera(cam) {}
+
+	PlayableEntity& getPlayer() {
+		return playable_entities[player_entity_index];
+	}
 
 	void step(
 			const std::chrono::microseconds dt,
 			const Input::ButtonStates button_states,
 			const Input::MouseState mouse_state) {
+		PlayableEntity& player = getPlayer();
+
 		player.moveFromInputs(dt, button_states, mouse_state);
 
-		// update player entity
-		Entity& player_ent = entities[player.entity_index];
-		player_ent.position = player.position;
-		// entity only rotates about y, looks weird otherwise
-		// not sure why it has to be negated, I guess due to the coordinate axes crap
-		player_ent.rotation.y = -player.rotation.y;
+		if (button_states.jump) {
+			camera.update(Camera::kDefaultPosition, Camera::kDefaultRotation);
+		} else {
+			glm::vec3 camera_position = player.position + player.eye_position;
+			camera.update(camera_position, player.view_rotation);
+		}
+	}
 
-		glm::vec3 camera_position = player.position + player.eye_position;
-		camera.update(camera_position, player.rotation);
+	void addStaticEntity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale) {
+		static_entities.emplace_back(mesh_id, material_id, position, rotation, scale);
+	}
 
-		// if (button_states.change_camera) {
-		// 	camera.update(Camera::kDefaultPosition, Camera::kDefaultRotation);
-		// } else {
-		// 	camera.update(player.position, player.rotation);
-		// }
+	void addDynamicEntity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale) {
+		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation, scale);
+	}
+
+	void addPlayableEntity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale,
+			glm::vec3 eye_position) {
+		playable_entities.emplace_back(mesh_id, material_id, position, rotation, scale, eye_position);
+	}
+
+	const Entity* getNextEntity(int entity_index) const {
+		if (entity_index < static_entities.size()) {
+			return &(static_entities[entity_index]);
+		}
+
+		entity_index -= static_entities.size();
+
+		if (entity_index < dynamic_entities.size()) {
+			return static_cast<const Entity*>(&(dynamic_entities[entity_index]));
+		}
+
+		entity_index -= dynamic_entities.size();
+
+		if (entity_index < playable_entities.size()) {
+			return static_cast<const Entity*>(&(playable_entities[entity_index]));
+		}
+
+		return nullptr;
 	}
 };

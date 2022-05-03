@@ -22,7 +22,7 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 
 	for (const auto& platform : level.platforms) {
 		uint16_t model_id = _renderer->uploadModel(platform.model);
-		_scene->entities.emplace_back(
+		_scene->addStaticEntity(
 				model_id,
 				default_material_id,
 				platform.position,
@@ -32,28 +32,26 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 
 	// just default to the first fighter as the player for now
 	int player_fighter_num = 0;
-	int player_index = _scene->entities.size() + player_fighter_num;
 
 	for (const auto& fighter : level.fighters) {
 		uint16_t model_id = _renderer->uploadModel(fighter.model);
-		_scene->entities.emplace_back(
+
+		glm::vec3 fighter_eye_position = // temporary
+				glm::vec3(
+						0.0f,
+						fighter.dimensions.eye_height,
+						0.0f);
+
+		_scene->addPlayableEntity(
 				model_id,
 				default_material_id,
 				fighter.position,
 				fighter.rotation,
-				1.0f); // scale
+				1.0f, // scale
+				fighter_eye_position);
 	}
 
-	util::log("first fighter index: %d, entity count: %d", player_index, _scene->entities.size());
-
-	_scene->player.entity_index = player_index;
-	_scene->player.eye_position = // temporary
-			glm::vec3(
-					0.0f,
-					level.fighters[player_fighter_num].dimensions.eye_height,
-					0.0f);
-	_scene->player.position = level.fighters[player_fighter_num].position;
-	_scene->player.rotation = level.fighters[player_fighter_num].rotation;
+	_scene->player_entity_index = player_fighter_num;
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 

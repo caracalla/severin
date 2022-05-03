@@ -8,6 +8,7 @@ namespace Input {
 		bool right = false;
 		bool rise = false;
 		bool fall = false;
+		bool jump = false;
 		bool sprint = false;
 		bool action = false;
 	};
