@@ -8,8 +8,8 @@ namespace Input {
 		bool right = false;
 		bool rise = false;
 		bool fall = false;
+		bool sprint = false;
 		bool action = false;
-		bool change_camera = false; // remove
 	};
 
 	struct MouseState {

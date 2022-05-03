@@ -93,7 +93,7 @@ void WindowHandler::handleInput() {
 					break;
 				case SDLK_LSHIFT:
 					// reset camera
-					_button_states.change_camera = true;
+					_button_states.sprint = true;
 					break;
 				default:
 					break;
@@ -122,7 +122,7 @@ void WindowHandler::handleInput() {
 					break;
 				case SDLK_LSHIFT:
 					// reset camera
-					_button_states.change_camera = false;
+					_button_states.sprint = false;
 				default:
 					break;
 			}

@@ -47,12 +47,13 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	util::log("first fighter index: %d, entity count: %d", player_index, _scene->entities.size());
 
 	_scene->player.entity_index = player_index;
-	_scene->player.eye_height = level.fighters[player_fighter_num].dimensions.eye_height;
+	_scene->player.eye_position = // temporary
+			glm::vec3(
+					0.0f,
+					level.fighters[player_fighter_num].dimensions.eye_height,
+					0.0f);
 	_scene->player.position = level.fighters[player_fighter_num].position;
 	_scene->player.rotation = level.fighters[player_fighter_num].rotation;
-
-	// I hate this
-	_scene->camera.update(_scene->player.position, _scene->player.rotation);
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 
@@ -65,6 +66,12 @@ void Engine::run() {
 	steady_clock::time_point frame_start =
 			steady_clock::now();
 
+	// lock frame rate at 60 FPS
+	constexpr std::chrono::microseconds kMinFrameTime(16000);
+
+	// do a scene step just to get things set up (like the camera)
+	_scene->step(kMinFrameTime, Input::ButtonStates{}, Input::MouseState{});
+
 	while (isRunning()) {
 		// draw current scene
 		_renderer->draw(_scene);
@@ -72,9 +79,6 @@ void Engine::run() {
 		// get frame duration
 		steady_clock::time_point frame_end = steady_clock::now();
 		microseconds frame_duration = duration_cast<microseconds>(frame_end - frame_start);
-
-		// lock frame rate at 60 FPS
-		constexpr std::chrono::microseconds kMinFrameTime(16000);
 
 		if (frame_duration < kMinFrameTime) {
 			auto sleep_time = kMinFrameTime - frame_duration;
