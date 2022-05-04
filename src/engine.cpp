@@ -32,6 +32,7 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 
 	// just default to the first fighter as the player for now
 	int player_fighter_num = 0;
+	float fighter_mass = 72.0f;
 
 	for (const auto& fighter : level.fighters) {
 		uint16_t model_id = _renderer->uploadModel(fighter.model);
@@ -48,7 +49,8 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 				fighter.position,
 				fighter.rotation,
 				1.0f, // scale
-				fighter_eye_position);
+				fighter_eye_position,
+				fighter_mass);
 	}
 
 	_scene->player_entity_index = player_fighter_num;

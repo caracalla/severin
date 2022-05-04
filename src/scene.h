@@ -16,7 +16,7 @@ struct Entity { // 32 bytes total
 	uint16_t material_id; // identifier for shading
 	glm::vec3 position; // 12 bytes
 	glm::vec3 rotation; // 12 bytes
-	float scale = 1.0; // 4 bytes
+	float scale = 1.0f; // 4 bytes
 
 	Entity(
 			uint16_t mesh_id,
@@ -32,22 +32,45 @@ struct Entity { // 32 bytes total
 };
 
 struct DynamicEntity : public Entity {
-	glm::vec3 velocity;
+	glm::vec3 velocity{0.0f};
+	glm::vec3 force{0.0f};
+	float mass;
 
 	DynamicEntity(
 			uint16_t mesh_id,
 			uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,
-			float scale) : Entity(mesh_id, material_id, position, rotation, scale) {}
+			float scale,
+			float mass) : Entity(mesh_id, material_id, position, rotation, scale), mass(mass) {}
+
+	void applyForce(glm::vec3 new_force) {
+		force += new_force;
+	}
+
+	void applyAcceleration(glm::vec3 acceleration) {
+		force += acceleration * mass;
+	}
+
+	void move(const float dt_sec) {
+		velocity += force * dt_sec / mass;
+		position += velocity * dt_sec;
+
+		if (position.y < 0.001) {
+			position.y = 0;
+			velocity = glm::vec3(0.0f);
+		}
+
+		force = glm::vec3(0.0f);
+	}
 };
 
 struct PlayableEntity : public DynamicEntity {
-	glm::vec3 eye_position; // relative to model origin point, should be scaled by scale I guess, and rotation-aware (right now only y component is used)
+	glm::vec3 eye_position; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
 	glm::vec3 view_rotation;
 
-	static constexpr float kMovementIncrement = 0.05;
-	static constexpr float kSprintFactor = 3;
+	static constexpr float kWalkSpeed = 1.8f; // meters per second
+	static constexpr float kSprintFactor = 3.0f;
 
 	PlayableEntity(
 			uint16_t mesh_id,
@@ -55,13 +78,14 @@ struct PlayableEntity : public DynamicEntity {
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale,
+			float mass,
 			glm::vec3 eye_position) :
-					DynamicEntity(mesh_id, material_id, position, rotation, scale),
+					DynamicEntity(mesh_id, material_id, position, rotation, scale, mass),
 					eye_position(eye_position),
 					view_rotation(rotation) {}
 
 	void moveFromInputs(
-			const std::chrono::microseconds dt,
+			const float dt_sec,
 			const Input::ButtonStates button_states,
 			const Input::MouseState mouse_state) {
 		// apply mouse movement to rotation
@@ -75,7 +99,7 @@ struct PlayableEntity : public DynamicEntity {
 		// apply key inputs to motion
 		glm::vec4 translation{};
 
-		float max_velocity = kMovementIncrement;
+		float max_velocity = kWalkSpeed * dt_sec;
 
 		if (button_states.sprint) {
 			max_velocity *= kSprintFactor;
@@ -98,6 +122,11 @@ struct PlayableEntity : public DynamicEntity {
 		}
 		if (button_states.fall) {
 			translation.y -= max_velocity;
+		}
+
+		constexpr glm::vec3 jump_acceleration{0.0f, 500.0f, 0.0f};
+		if (button_states.jump && position.y < 0.001) {
+			applyAcceleration(jump_acceleration);
 		}
 
 		glm::mat4 y_rotation =
@@ -150,7 +179,7 @@ struct Scene {
 	std::vector<PlayableEntity> playable_entities;
 
 	Camera camera;
-	int player_entity_index = 0;
+	int player_entity_index = 0; // only ever one "player" for now
 
 	Scene(Camera cam) : camera(cam) {}
 
@@ -158,15 +187,28 @@ struct Scene {
 		return playable_entities[player_entity_index];
 	}
 
+	void applyPhysics(const float dt_sec) {
+		constexpr glm::vec3 gravity_acceleration{0.0f, -9.8f, 0.0f};
+
+		for (auto& entity : playable_entities) {
+			entity.applyAcceleration(gravity_acceleration);
+			entity.move(dt_sec);
+		}
+	}
+
 	void step(
 			const std::chrono::microseconds dt,
 			const Input::ButtonStates button_states,
 			const Input::MouseState mouse_state) {
 		PlayableEntity& player = getPlayer();
+		float dt_sec = static_cast<float>(dt.count()) / 1000000;
 
-		player.moveFromInputs(dt, button_states, mouse_state);
+		player.moveFromInputs(dt_sec, button_states, mouse_state);
 
-		if (button_states.jump) {
+		applyPhysics(dt_sec);
+
+		// TODO: remove
+		if (button_states.change_camera) {
 			camera.update(Camera::kDefaultPosition, Camera::kDefaultRotation);
 		} else {
 			glm::vec3 camera_position = player.position + player.eye_position;
@@ -188,8 +230,9 @@ struct Scene {
 			uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,
-			float scale) {
-		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation, scale);
+			float scale,
+			float mass) {
+		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation, scale, mass);
 	}
 
 	void addPlayableEntity(
@@ -198,8 +241,9 @@ struct Scene {
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale,
-			glm::vec3 eye_position) {
-		playable_entities.emplace_back(mesh_id, material_id, position, rotation, scale, eye_position);
+			glm::vec3 eye_position,
+			float mass) {
+		playable_entities.emplace_back(mesh_id, material_id, position, rotation, scale, mass, eye_position);
 	}
 
 	const Entity* getNextEntity(int entity_index) const {

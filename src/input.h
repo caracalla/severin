@@ -11,6 +11,7 @@ namespace Input {
 		bool jump = false;
 		bool sprint = false;
 		bool action = false;
+		bool change_camera = false;
 	};
 
 	struct MouseState {
