@@ -10,6 +10,7 @@ add_executable(severin
   level.h
   model.h
   model.cpp
+  entity.h
   scene.h
   renderer.h)
 
