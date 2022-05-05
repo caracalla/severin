@@ -100,8 +100,8 @@ int util::randomInt(int lower_bound, int upper_bound) {
 	return (int)randomFloat(lower_bound, upper_bound);
 }
 
-void util::logVec3(glm::vec3 vec) {
-	printf("    %f, %f, %f\n\n", vec.x, vec.y, vec.z);
+void util::logVec3(glm::vec3 vec, const char* name) {
+	printf("%s: %f, %f, %f\n", name, vec.x, vec.y, vec.z);
 }
 
 void util::logMat4(glm::mat4 mat) {
