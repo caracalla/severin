@@ -25,6 +25,8 @@ WindowHandler::WindowHandler(int width, int height) :
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
+	SDL_SetWindowPosition(sdl_window, 0, 0);
+
 	_is_running = true;
 }
 

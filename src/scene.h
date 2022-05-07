@@ -62,6 +62,16 @@ struct Scene {
 		for (auto& entity : playable_entities) {
 			entity.applyAcceleration(gravity_acceleration);
 			entity.move(dt_sec);
+
+			entity.is_on_ground = false;
+			for (auto static_ent : static_entities) {
+				entity.collideWith(static_ent); // may set entity.is_on_ground back to true
+			}
+
+			// update collision
+			Sphere& sphere = entity.collision.shape.sphere;
+			sphere.center_start = entity.position;
+			sphere.center_start.y += sphere.radius;
 		}
 	}
 
@@ -72,6 +82,10 @@ struct Scene {
 		PlayableEntity& player = getPlayer();
 		float dt_sec = static_cast<float>(dt.count()) / 1000000;
 
+		// limit the amount of time used for physics
+		dt_sec = std::min(dt_sec, 0.02f);
+
+		// update velocity, but not position
 		player.moveFromInputs(dt_sec, button_states, mouse_state);
 
 		applyPhysics(dt_sec);

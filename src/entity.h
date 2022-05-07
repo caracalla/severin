@@ -1,21 +1,24 @@
 #pragma once
 
+#include <collision.h>
 #include <input.h>
 #include <util.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
 
 
 // the in-world representation of any object
-struct Entity { // 32 bytes total
+struct Entity { // 64 bytes total
 	uint16_t mesh_id; // identifier for geometry
 	uint16_t material_id; // identifier for shading
 	glm::vec3 position; // 12 bytes
 	glm::vec3 rotation; // 12 bytes
 	float scale = 1.0f; // 4 bytes
+	Collision collision; // 32 bytes
 
 	Entity(
 			uint16_t mesh_id,
@@ -34,6 +37,8 @@ struct DynamicEntity : public Entity {
 	glm::vec3 velocity{0.0f};
 	glm::vec3 force{0.0f};
 	float mass;
+	float springiness = 0.0f;
+	bool is_on_ground = true;
 
 	DynamicEntity(
 			uint16_t mesh_id,
@@ -42,6 +47,15 @@ struct DynamicEntity : public Entity {
 			glm::vec3 rotation,
 			float scale,
 			float mass) : Entity(mesh_id, material_id, position, rotation, scale), mass(mass) {}
+
+	void initCollision(float radius) {
+		collision.type = Collision::Type::sphere;
+
+		collision.shape.sphere.radius = radius;
+
+		glm::vec3 sphere_pos = position + glm::vec3(0.0f, radius, 0.0f);
+		collision.shape.sphere.center_start = sphere_pos;
+	}
 
 	void applyForce(glm::vec3 new_force) {
 		force += new_force;
@@ -55,13 +69,53 @@ struct DynamicEntity : public Entity {
 		velocity += force * dt_sec / mass;
 		position += velocity * dt_sec;
 
-		// stupid hack, remove
-		if (position.y < 0.001) {
-			position.y = 0;
-			velocity.y = 0.0f;
+		if (position.y < -40.0f) {
+			// warp to a high-ish point if you go far enough down
+			position.y = 10;
+			velocity.y = 0.0f; // -420.0f;
 		}
 
 		force = glm::vec3(0.0f);
+	}
+
+	void collideWith(Entity static_entity) {
+		// assume this has sphere and static ent has aabb
+		AABB& box = static_entity.collision.shape.box;
+		Sphere& sphere = collision.shape.sphere;
+		glm::vec3 sphere_center_end = position;
+		sphere_center_end.y += sphere.radius;
+
+		glm::vec3 collision_point;
+		bool did_collide = Collision::sphereVsAABB(sphere, sphere_center_end, box, collision_point);
+
+		if (did_collide) {
+			glm::vec3 collision_direction = sphere_center_end - collision_point;
+
+			while (glm::all(glm::epsilonEqual(collision_direction, glm::vec3(0.0f), util::kEpsilon))) {
+				// sphere_center_end is now inside the box, so we'll walk the sphere
+				// backwards from the direction it came in, and keep testing it until
+				// it's no longer inside
+				collision_direction = glm::normalize(sphere.center_start - sphere_center_end);
+				sphere_center_end = collision_point + (collision_direction * sphere.radius);
+				sphere.center_start = sphere_center_end + (collision_direction * sphere.radius);
+				did_collide = Collision::sphereVsAABB(sphere, sphere_center_end, box, collision_point); // is there any use for did_collide here?
+				collision_direction = sphere_center_end - collision_point;
+			}
+
+			collision_direction = glm::normalize(collision_direction);
+			position = collision_point + (collision_direction * sphere.radius);
+			position.y -= sphere.radius;
+
+			if (collision_direction.y > 0.5f) {
+				is_on_ground = true;
+			}
+
+			// project current velocity along collision direction, and negate the
+			// orthogonal component to provide "bounce back"
+			glm::vec3 parallel = glm::dot(collision_direction, velocity) * collision_direction;
+			glm::vec3 orthogonal = velocity - parallel;
+			velocity = orthogonal - parallel * springiness;
+		}
 	}
 };
 
@@ -144,6 +198,10 @@ struct PlayableEntity : public DynamicEntity {
 			if (!movement_input_detected) {
 				// no input, but moving faster than delta_speed -> accel in direction opposite current_direction
 				accel_direction = glm::normalize(current_direction) * -1.0f;
+
+				if (!is_on_ground) {
+					scalar_accel = 0;
+				}
 			} else {
 				// we'll use desired_direction, let's prepare it
 				glm::mat4 y_rotation =
@@ -178,9 +236,11 @@ struct PlayableEntity : public DynamicEntity {
 		}
 
 		// jump stuff
-		if (button_states.jump && position.y < 0.001) {
-			constexpr glm::vec3 jump_acceleration{0.0f, 500.0f, 0.0f};
-			applyAcceleration(jump_acceleration);
+		if (button_states.jump && is_on_ground) {
+			constexpr float jump_speed = 0.8f;
+			velocity.y += 8.0f;
+			is_on_ground = false;
+			util::log("jumping!");
 		}
 
 		// player model should only rotate about the y axis

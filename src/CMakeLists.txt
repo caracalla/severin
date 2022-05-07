@@ -11,6 +11,7 @@ add_executable(severin
   model.h
   model.cpp
   entity.h
+  collision.h
   scene.h
   renderer.h)
 

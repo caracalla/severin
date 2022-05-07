@@ -28,6 +28,11 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 				platform.position,
 				glm::vec3(0.0f), // rotation
 				1.0f); // scale
+
+		Entity& ent = _scene->static_entities.back();
+		ent.collision.type = Collision::Type::aabb;
+		ent.collision.shape.box.min_pos = platform.start_pos;
+		ent.collision.shape.box.max_pos = platform.end_pos;
 	}
 
 	// just default to the first fighter as the player for now
@@ -51,6 +56,10 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 				1.0f, // scale
 				fighter_eye_position,
 				fighter_mass);
+
+		PlayableEntity& ent = _scene->playable_entities.back();
+		float radius = fighter.dimensions.height / 2;
+		ent.initCollision(radius);
 	}
 
 	_scene->player_entity_index = player_fighter_num;

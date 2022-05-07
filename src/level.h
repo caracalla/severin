@@ -16,24 +16,16 @@ void logLevelLoadError(const char* message, std::string line) {
 struct Level {
   struct Platform {
     glm::vec3 position;
-		float width;
-		float height;
-		float depth;
 		glm::vec3 start_pos;
 		glm::vec3 end_pos;
     Model model;
 
-		Platform(glm::vec3 start_pos, glm::vec3 end_pos) {
-			// figure out position
-			width = end_pos.x - start_pos.x;
-			height = end_pos.y - start_pos.y;
-			depth = end_pos.z - start_pos.z;
+		Platform(glm::vec3 start_pos, glm::vec3 end_pos) :
+				start_pos(start_pos), end_pos(end_pos) {
+			position = (start_pos + end_pos) * 0.5f;
 
-			position.x = start_pos.x + (width / 2);
-			position.y = start_pos.y + (height / 2);
-			position.z = start_pos.z + (depth / 2);
-
-			model = Model::createHexahedron(width, height, depth);
+			glm::vec3 dimensions = end_pos - start_pos;
+			model = Model::createHexahedron(dimensions.x, dimensions.y, dimensions.z);
 		}
   };
 
@@ -168,119 +160,3 @@ struct Level {
 		return level;
   }
 };
-
-
-
-
-
-// bool Engine::loadLevelFile(const std::string& level_filename) {
-// 	bool player_found = false;
-// 	bool assets_found = false;
-// 	std::string assets_basedir{};
-// 	uint16_t last_model_id = 0;
-// 	uint16_t default_material_id = 0; // placeholder
-
-// 	std::string line;
-// 	int line_count = 0;
-
-// 	while (std::getline(level_file, line)) {
-// 		if (line.size() == 0 || line[0] == '#') {
-// 			// skip blank lines and comments
-// 			continue;
-// 		}
-
-// 		std::istringstream line_stream(line);
-
-// 		if (line_count == 0) {
-// 			// player info
-// 			glm::vec3 player_pos;
-
-// 			if (!(line_stream >> player_pos.x >> player_pos.y >> player_pos.z)) {
-// 				util::logError("player position improperly formatted!");
-// 				return false;
-// 			}
-
-// 			_scene->player.position = player_pos;
-
-// 			player_found = true;
-// 		} else if (line_count == 1) {
-// 			// assets base directory
-// 			if (!(line_stream >> assets_basedir)) {
-// 				util::logError("assets base directory could not be read!");
-// 				return false;
-// 			}
-
-// 			assets_found = true;
-// 		} else {
-// 			char identifier;
-// 			line_stream >> identifier;
-			
-// 			if (identifier == 'm') {
-// 				// model
-// 				std::string model_file_name;
-// 				if (!(line_stream >> model_file_name)) {
-// 					util::logError("model file name could not be read: %s", line.c_str());
-// 					return false;
-// 				}
-
-// 				Model model = Model::createFromOBJ(assets_basedir, model_file_name);
-// 				last_model_id = _renderer->uploadModel(std::move(model));
-// 			} else if (identifier == 'e') {
-// 				// entity
-// 				glm::vec3 entity_pos;
-// 				glm::vec3 entity_rot;
-// 				float entity_scale;
-
-// 				if (
-// 						!(
-// 								line_stream >> entity_pos.x >> entity_pos.y >> entity_pos.z
-// 										>> entity_rot.x >> entity_rot.y >> entity_rot.z
-// 										>> entity_scale)) {
-// 					util::logError("entity info improperly formatted: %s", line.c_str());
-// 					return false;
-// 				}
-
-// 				_scene->entities.emplace_back(
-// 						last_model_id,
-// 						default_material_id,
-// 						entity_pos,
-// 						entity_rot,
-// 						entity_scale);
-// 			} else if (identifier == 'h') {
-// 				// entity
-// 				glm::vec3 hex_min;
-// 				glm::vec3 hex_max;
-// 				glm::vec3 hex_pos = glm::vec3(0.0); // boxes are always at 0 for now
-// 				glm::vec3 hex_rot = glm::vec3(0.0);
-// 				float hex_scale = 1.0;
-
-// 				if (
-// 						!(
-// 								line_stream >> hex_min.x >> hex_min.y >> hex_min.z
-// 										>> hex_max.x >> hex_max.y >> hex_max.z)) {
-// 					util::logError("hexahedron info improperly formatted: %s", line.c_str());
-// 					return false;
-// 				}
-
-// 				Model model = Model::createHexahedron(hex_min, hex_max);
-// 				uint16_t model_id = _renderer->uploadModel(model);
-
-// 				_scene->entities.emplace_back(
-// 						model_id,
-// 						default_material_id,
-// 						hex_pos,
-// 						hex_rot,
-// 						hex_scale);
-// 			} else {
-// 				util::logError("what in the world is this? %s", line.c_str());
-// 				return false;
-// 			}
-// 		}
-
-// 		line_count += 1;
-// 	}
-
-// 	util::log("successfully loaded level %s", level_filename.c_str());
-
-// 	return true;
-// }

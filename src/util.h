@@ -17,7 +17,9 @@ namespace util {
 	float randomFloat(float lower_bound, float upper_bound);
 	int randomInt(int lower_bound, int upper_bound);
 
-	void logVec3(glm::vec3 vec, const char* name = "");
+	void logVec3(glm::vec3 vec, const char* fmt = "", ...);
 	void logMat4(glm::mat4 mat);
 	float getElapsedTime();
+
+	constexpr static float kEpsilon = 0.0001f;
 }
