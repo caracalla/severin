@@ -63,6 +63,10 @@ void WindowHandler::handleInput() {
 
 	_mouse_state.reset();
 
+	if (_button_states.change_camera) {
+		_button_states.change_camera = false;
+	}
+
 	// Handle events on queue
 	while (SDL_PollEvent(&input_event) != 0) {
 		// close the window when user alt-f4s or clicks the X button
@@ -136,10 +140,10 @@ void WindowHandler::handleInput() {
 					// reset camera
 					_button_states.sprint = false;
 					break;
-				case SDLK_LCTRL:
-					// reset camera
-					_button_states.change_camera = false;
-					break;
+				// case SDLK_LCTRL:
+				// 	// reset camera
+				// 	_button_states.change_camera = false;
+				// 	break;
 				default:
 					break;
 			}

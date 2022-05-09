@@ -15,7 +15,7 @@ struct Camera {
 	glm::mat4 view;
 	glm::mat4 projection;
 
-	static constexpr glm::vec3 kDefaultPosition = glm::vec3(0.0f, 5.0f, 10.0f);
+	static constexpr glm::vec3 kDefaultPosition = glm::vec3(0.0f, 3.0f, 10.0f);
 	static constexpr glm::vec3 kDefaultRotation = glm::vec3(0.3, 0.45f, 0.0f);
 
 	Camera(float aspect_ratio) {
@@ -90,9 +90,21 @@ struct Scene {
 
 		applyPhysics(dt_sec);
 
+		static bool third_person_cam = false;
+
 		// TODO: remove
 		if (button_states.change_camera) {
-			camera.update(Camera::kDefaultPosition, Camera::kDefaultRotation);
+			third_person_cam = !third_person_cam;
+		}
+
+		if (third_person_cam) {
+			// camera.update(Camera::kDefaultPosition, Camera::kDefaultRotation);
+			glm::vec3 camera_position = Camera::kDefaultPosition;
+			glm::mat4 rotation =
+					glm::rotate(glm::mat4(1.0f), -player.view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+			rotation = glm::rotate(rotation, -player.view_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+			camera_position = glm::vec3(rotation * glm::vec4(camera_position, 1.0f));
+			camera.update(player.position + camera_position, player.view_rotation);
 		} else {
 			glm::vec3 camera_position = player.position + player.eye_position;
 			camera.update(camera_position, player.view_rotation);

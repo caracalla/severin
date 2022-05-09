@@ -11,5 +11,6 @@ bin/severin
 
 ## TODO
 * avoid copying Model objects (unique pointers?)
-* collisions
+* collisions - can still pass through walls if going fast enough
+  * ray test?
 * make player class?
