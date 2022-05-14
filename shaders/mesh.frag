@@ -13,6 +13,16 @@ layout (location = 0) out vec4 outFragColor;
 //   vec4 sunlightColor;
 // } scene;
 
+layout (push_constant) uniform constants {
+  float time;
+  vec2 resolution;
+} PushConstants;
+
+#define u_time PushConstants.time
+#define normalized_fragcoord (gl_FragCoord.xy / PushConstants.resolution)
+
+#define PI 3.14159265
+
 void main() {
   outFragColor = vec4(inColor, 1.0f);
 }

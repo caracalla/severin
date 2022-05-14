@@ -23,15 +23,14 @@ layout (std140, set = 1, binding = 0) readonly buffer ObjectBuffer {
   Object objects[];
 } objectData;
 
-// using ObjectBuffer SSBO instead of push constants
-// layout (push_constant) uniform constants {
-//   vec4 data;
-//   mat4 render_matrix;
-// } PushConstants;
-
 layout (push_constant) uniform constants {
   float time;
+  vec2 resolution;
 } PushConstants;
+
+#define u_time PushConstants.time
+
+#define PI 3.14159265
 
 mat4 rotate(vec3 axis, float angle) {
   axis = normalize(axis);
@@ -53,17 +52,14 @@ void main() {
 
   gl_Position = transformMatrix * vec4(vertexPosition, 1.0f);
 
-  float s = sin(PushConstants.time);
-  float c = cos(PushConstants.time);
+  float s = sin(u_time);
+  float c = cos(u_time);
   vec3 light_dir = vec3(s, 1.0f, c);
   vec3 normal = inverse(transpose(mat3(modelMatrix))) * normalize(vertexNormal);
 
   float min_light = 0.2f;
   float light_intensity = max(dot(light_dir, normal), min_light);
 
-  // normal = inverse(transpose(mat3(model))) * normalize(aNormal);
-
   outColor = vertexColor * light_intensity;
-  // outColor = vertexColor;
   texCoord = vertexUV;
 }
