@@ -53,6 +53,17 @@ void main() {
 
   gl_Position = transformMatrix * vec4(vertexPosition, 1.0f);
 
-  outColor = vertexColor;
+  float s = sin(PushConstants.time);
+  float c = cos(PushConstants.time);
+  vec3 light_dir = vec3(s, 1.0f, c);
+  vec3 normal = inverse(transpose(mat3(modelMatrix))) * normalize(vertexNormal);
+
+  float min_light = 0.2f;
+  float light_intensity = max(dot(light_dir, normal), min_light);
+
+  // normal = inverse(transpose(mat3(model))) * normalize(aNormal);
+
+  outColor = vertexColor * light_intensity;
+  // outColor = vertexColor;
   texCoord = vertexUV;
 }

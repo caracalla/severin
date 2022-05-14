@@ -92,13 +92,11 @@ struct Scene {
 
 		static bool third_person_cam = false;
 
-		// TODO: remove
 		if (button_states.change_camera) {
 			third_person_cam = !third_person_cam;
 		}
 
 		if (third_person_cam) {
-			// camera.update(Camera::kDefaultPosition, Camera::kDefaultRotation);
 			glm::vec3 camera_position = Camera::kDefaultPosition;
 			glm::mat4 rotation =
 					glm::rotate(glm::mat4(1.0f), -player.view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));

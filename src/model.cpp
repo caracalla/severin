@@ -1,8 +1,33 @@
 #include <model.h>
+#include <util.h>
 
 #include <tiny_obj_loader.h>
 
 #include <iostream>
+
+
+
+struct Triangle {
+	Vertex v0;
+	Vertex v1;
+	Vertex v2;
+
+	Triangle (glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 color) {
+		glm::vec3 normal = glm::cross(p1 - p0, p2 - p0);
+
+		v0.position = p0;
+		v0.normal = normal;
+		v0.color = color;
+
+		v1.position = p1;
+		v1.normal = normal;
+		v1.color = color;
+
+		v2.position = p2;
+		v2.normal = normal;
+		v2.color = color;
+	}
+};
 
 
 Model Model::createTriangle() {
@@ -49,67 +74,36 @@ Model Model::createHexahedron(float width, float height, float depth, glm::vec3 
 		model.vertices.push_back(vertex);
 	};
 
+	auto insertTriangle = [&model](Triangle triangle) {
+		model.vertices.push_back(triangle.v0);
+		model.vertices.push_back(triangle.v1);
+		model.vertices.push_back(triangle.v2);
+	};
+
 	// build top
-	insertVertex(rtf);
-	insertVertex(rtr);
-	insertVertex(ltr);
-
-	insertVertex(ltr);
-	insertVertex(ltf);
-	insertVertex(rtf);
-
-	color = base_color * 0.2f;
+	insertTriangle(Triangle(rtf, rtr, ltr, color));
+	insertTriangle(Triangle(ltr, ltf, rtf, color));
 
 	// build bottom
-	insertVertex(rbf);
-	insertVertex(lbf);
-	insertVertex(lbr);
-
-	insertVertex(lbr);
-	insertVertex(rbr);
-	insertVertex(rbf);
+	insertTriangle(Triangle(rbf, lbf, lbr, color));
+	insertTriangle(Triangle(lbr, rbr, rbf, color));
 
 	// build front (actually this is the rear I messed up the z coords)
-	color = base_color * 0.4f;
-
-	insertVertex(rtf);
-	insertVertex(ltf);
-	insertVertex(lbf);
-
-	insertVertex(lbf);
-	insertVertex(rbf);
-	insertVertex(rtf);
-
-	color = glm::vec3(0.4f, 0.0f, 0.0f); // make the front red temporarily
+	insertTriangle(Triangle(rtf, ltf, lbf, color));
+	insertTriangle(Triangle(lbf, rbf, rtf, color));
 
 	// build rear (actually this is the front I messed up the z coords)
-	insertVertex(rtr);
-	insertVertex(rbr);
-	insertVertex(lbr);
-
-	insertVertex(lbr);
-	insertVertex(ltr);
-	insertVertex(rtr);
-
-	color = base_color * 0.6f;
+	glm::vec3 red = glm::vec3(0.4f, 0.0f, 0.0f); // make the front red temporarily
+	insertTriangle(Triangle(rtr, rbr, lbr, red));
+	insertTriangle(Triangle(lbr, ltr, rtr, red));
 
 	// build left
-	insertVertex(ltf);
-	insertVertex(ltr);
-	insertVertex(lbr);
-
-	insertVertex(lbr);
-	insertVertex(lbf);
-	insertVertex(ltf);
+	insertTriangle(Triangle(ltf, ltr, lbr, color));
+	insertTriangle(Triangle(lbr, lbf, ltf, color));
 
 	// build right
-	insertVertex(rtf);
-	insertVertex(rbf);
-	insertVertex(rbr);
-
-	insertVertex(rbr);
-	insertVertex(rtr);
-	insertVertex(rtf);
+	insertTriangle(Triangle(rtf, rbf, rbr, color));
+	insertTriangle(Triangle(rbr, rtr, rtf, color));
 
 	return model;
 }
