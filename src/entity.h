@@ -74,12 +74,15 @@ struct DynamicEntity : public Entity {
 		force = glm::vec3(0.0f);
 	}
 
-	void collideWith(Entity other_entity, glm::vec3& sphere_center_end) {
+	glm::vec3 collideWith(Entity other_entity, glm::vec3& sphere_center_end) {
 		// assume this has sphere and static ent has aabb
 		Collision::Type other_ent_type = other_entity.collision.type;
 		Sphere& sphere = collision.shape.sphere;
+		glm::vec3 new_position = sphere_center_end;
 
-		if (other_ent_type == Collision::Type::aabb) {
+		if (other_ent_type == Collision::Type::none) {
+			// do nothing
+		} else if (other_ent_type == Collision::Type::aabb) {
 			AABB& box = other_entity.collision.shape.box;
 
 			glm::vec3 collision_point;
@@ -108,7 +111,7 @@ struct DynamicEntity : public Entity {
 				}
 
 				collision_direction = glm::normalize(collision_direction);
-				position = collision_point + (collision_direction * sphere.radius);
+				new_position = collision_point + (collision_direction * sphere.radius);
 
 				if (collision_direction.y > 0.5f) {
 					is_on_ground = true;
@@ -120,8 +123,39 @@ struct DynamicEntity : public Entity {
 				glm::vec3 orthogonal = velocity - parallel;
 				velocity = orthogonal - parallel * springiness;
 			}
-		} else if (other_ent_type == Collision::Type::sphere){
-			// do sphere-sphere
+		} else if (other_ent_type == Collision::Type::sphere) {
+			Sphere& other_sphere = other_entity.collision.shape.sphere;
+
+			glm::vec3 separation = sphere_center_end - other_sphere.center_start;
+			glm::vec3 collision_direction;
+			float distance;
+			float final_distance = sphere.radius + other_sphere.radius;
+			
+			if (util::isVectorZero(separation)) {
+				distance = 0.0f;
+
+				if (util::isVectorZero(velocity)) {
+					// arbitrary direction for this edge case
+					collision_direction = glm::vec3(0.0f, 0.0f, 1.0f);
+				} else {
+					// just go backwards
+					collision_direction = glm::normalize(-velocity);
+				}
+			} else {
+				distance = glm::length(separation);
+				collision_direction = glm::normalize(separation);
+			}
+
+			if (distance < final_distance) {
+				// did collide
+				new_position = other_sphere.center_start + final_distance * collision_direction;
+
+				glm::vec3 parallel = glm::dot(collision_direction, velocity) * collision_direction;
+				glm::vec3 orthogonal = velocity - parallel;
+				velocity = orthogonal - parallel * springiness;
+			}
 		}
+
+		return new_position;
 	}
 };

@@ -102,20 +102,18 @@ struct Scene {
 			entity.is_on_ground = false;
 
 			// player specific crap, should remove
-			glm::vec3 sphere_current_pos = entity.position;
-			sphere_current_pos.y += entity.collision.shape.sphere.radius;
+			entity.position.y += entity.collision.shape.sphere.radius;
 
 			for (auto static_ent : static_entities) {
 				// may set entity.is_on_ground back to true
-				entity.collideWith(static_ent, sphere_current_pos);
+				entity.position = entity.collideWith(static_ent, entity.position);
 			}
 
 			// update collision
 			Sphere& sphere = entity.collision.shape.sphere;
-			sphere.center_start = sphere_current_pos;
+			sphere.center_start = entity.position;
 			entity.position.y -= sphere.radius; // player specific crap, should remove
 		}
-
 
 		for (auto& entity : dynamic_entities) {
 			entity.applyAcceleration(gravity_acceleration);
@@ -124,7 +122,7 @@ struct Scene {
 			entity.is_on_ground = false;
 			for (auto static_ent : static_entities) {
 				// may set entity.is_on_ground back to true
-				entity.collideWith(static_ent, entity.position);
+				entity.position = entity.collideWith(static_ent, entity.position);
 			}
 
 			// update collision
@@ -173,13 +171,15 @@ struct Scene {
 		}
 	}
 
-	void addStaticEntity(
+	Entity* addStaticEntity(
 			ModelID mesh_id,
 			uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale) {
 		static_entities.emplace_back(mesh_id, material_id, position, rotation, scale);
+
+		return &(static_entities.back());
 	}
 
 	DynamicEntity* addDynamicEntity(
@@ -190,6 +190,7 @@ struct Scene {
 			float scale,
 			float mass) {
 		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation, scale, mass);
+
 		return &(dynamic_entities.back());
 	}
 

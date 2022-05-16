@@ -62,11 +62,13 @@ static glm::vec3 closestPointToAABB(glm::vec3 point, AABB box) {
 
 struct Collision {
 	enum class Type {
+		none,
 		sphere,
 		aabb
 	};
 
-	Type type;
+	Type type = Type::none;
+
 	union Shape {
 		Sphere sphere;
 		AABB box;

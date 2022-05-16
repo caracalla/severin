@@ -87,16 +87,17 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	icosa_model = subdivide(icosa_model);
 	glm::vec3 icosa_pos{0.0, 2.0, -5.0};
 	ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
-	DynamicEntity* ball_ent = _scene->addDynamicEntity(
+	Entity* ball_ent = _scene->addStaticEntity(
 				icosa_model_id,
 				default_material_id,
 				icosa_pos,
 				glm::vec3(0.0f), // rotation
-				1.0f, // scale
-				0.0f); // mass
+				1.0f); // scale
 
-	// no point to this yet
-	// ball_ent->initCollision(1.0f);
+	// set up icosahedron collision
+	ball_ent->collision.type = Collision::Type::sphere;
+	ball_ent->collision.shape.sphere.radius = 1.0f;
+	ball_ent->collision.shape.sphere.center_start = icosa_pos;
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 
