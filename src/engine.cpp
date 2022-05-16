@@ -21,7 +21,7 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	uint16_t default_material_id = 0; // placeholder
 
 	for (const auto& platform : level.platforms) {
-		uint16_t model_id = _renderer->uploadModel(platform.model);
+		ModelID model_id = _renderer->uploadModel(platform.model);
 		_scene->addStaticEntity(
 				model_id,
 				default_material_id,
@@ -42,10 +42,10 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	// set up projectile model
 	Model projectile_model = Model::createIcosahedron();
 	projectile_model = subdivide(projectile_model);
-	uint16_t projectile_model_id = _renderer->uploadModel(projectile_model);
+	ModelID projectile_model_id = _renderer->uploadModel(projectile_model);
 
 	for (const auto& fighter : level.fighters) {
-		uint16_t model_id = _renderer->uploadModel(fighter.model);
+		ModelID model_id = _renderer->uploadModel(fighter.model);
 
 		glm::vec3 fighter_eye_position = // temporary
 				glm::vec3(
@@ -74,7 +74,7 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	// add building model
 	Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
 	glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
-	uint16_t model_id = _renderer->uploadModel(model);
+	ModelID model_id = _renderer->uploadModel(model);
 	_scene->addStaticEntity(
 				model_id,
 				default_material_id,
@@ -86,7 +86,7 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	Model icosa_model = Model::createIcosahedron();
 	icosa_model = subdivide(icosa_model);
 	glm::vec3 icosa_pos{0.0, 2.0, -5.0};
-	uint16_t icosa_model_id = _renderer->uploadModel(icosa_model);
+	ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
 	DynamicEntity* ball_ent = _scene->addDynamicEntity(
 				icosa_model_id,
 				default_material_id,

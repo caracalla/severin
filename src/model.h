@@ -4,8 +4,9 @@
 
 #include <vector>
 
-// rotate anything and everything 180 degrees about the x axis
-// const glm::vec3 kDefaultRotation{};
+
+using ModelID = uint16_t;
+
 
 struct Vertex {
 	glm::vec3 position;

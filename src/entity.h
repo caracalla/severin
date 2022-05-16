@@ -2,6 +2,7 @@
 
 #include <collision.h>
 #include <input.h>
+#include <model.h>
 #include <util.h>
 
 #include <glm/glm.hpp>
@@ -12,7 +13,7 @@
 
 // the in-world representation of any object
 struct Entity { // 64 bytes total
-	uint16_t mesh_id; // identifier for geometry
+	ModelID mesh_id; // identifier for geometry
 	uint16_t material_id; // identifier for shading
 	glm::vec3 position; // 12 bytes
 	glm::vec3 rotation; // 12 bytes
@@ -20,7 +21,7 @@ struct Entity { // 64 bytes total
 	Collision collision; // 32 bytes
 
 	Entity(
-			uint16_t mesh_id,
+			ModelID mesh_id,
 			uint16_t material_id,
 			glm::vec3 position, // no restriction currently on where an entity's "position" is: for most things, it's the absolute center, but for the player, it's at the bottom
 			glm::vec3 rotation,
@@ -40,7 +41,7 @@ struct DynamicEntity : public Entity {
 	bool is_on_ground = true;
 
 	DynamicEntity(
-			uint16_t mesh_id,
+			ModelID mesh_id,
 			uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,

@@ -12,7 +12,7 @@ struct Renderer {
 
 	bool init();
 
-	uint16_t uploadModel(const Model model);
+	ModelID uploadModel(const Model model);
 
 	void draw(const Scene* const scene);
 

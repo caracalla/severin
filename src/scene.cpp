@@ -1,5 +1,6 @@
 #include <scene.h>
 
+
 void PlayableEntity::moveFromInputs(
     const float dt_sec,
     const Input::ButtonStates button_states,
