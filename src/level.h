@@ -20,12 +20,12 @@ struct Level {
 		glm::vec3 end_pos;
     Model model;
 
-		Platform(glm::vec3 start_pos, glm::vec3 end_pos) :
+		Platform(glm::vec3 start_pos, glm::vec3 end_pos, glm::vec3 color) :
 				start_pos(start_pos), end_pos(end_pos) {
 			position = (start_pos + end_pos) * 0.5f;
 
 			glm::vec3 dimensions = end_pos - start_pos;
-			model = Model::createHexahedron(dimensions.x, dimensions.y, dimensions.z);
+			model = Model::createHexahedron(dimensions.x, dimensions.y, dimensions.z, color);
 		}
   };
 
@@ -124,6 +124,7 @@ struct Level {
 				// a platform
 				glm::vec3 start_pos;
 				glm::vec3 end_pos;
+				glm::vec3 color{1.0f, 1.0f, 1.0f};
 
 				if (!(line_stream >> start_pos.x >> start_pos.y >> start_pos.z)) {
 					logLevelLoadError("platform start position improperly formatted!", line);
@@ -135,7 +136,11 @@ struct Level {
 					return level;
 				}
 
-				level.platforms.emplace_back(start_pos, end_pos);
+				if (!(line_stream >> color.x >> color.y >> color.z)) {
+					util::log("using default color for platform %s", line.c_str());
+				}
+
+				level.platforms.emplace_back(start_pos, end_pos, color);
 			} else {
 				logLevelLoadError("unrecognized input", line);
 			}

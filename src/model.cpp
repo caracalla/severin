@@ -46,6 +46,12 @@ Model Model::createTriangle() {
 	return model;
 }
 
+void insertTriangle(Model& model, Triangle triangle) {
+	model.vertices.push_back(triangle.v0);
+	model.vertices.push_back(triangle.v1);
+	model.vertices.push_back(triangle.v2);
+}
+
 Model Model::createHexahedron(float width, float height, float depth, glm::vec3 base_color) {
 	glm::vec3 box_min(-width / 2, -height / 2, -depth /2);
 	glm::vec3 box_max(width / 2, height / 2, depth /2);
@@ -67,45 +73,118 @@ Model Model::createHexahedron(float width, float height, float depth, glm::vec3 
 	Vertex vertex;
 	glm::vec3 color = base_color * 0.8f;
 
-	auto insertVertex = [&model, &color](glm::vec3 position) {
-		Vertex vertex;
-		vertex.color = color;
-		vertex.position = position;
-		model.vertices.push_back(vertex);
-	};
-
-	auto insertTriangle = [&model](Triangle triangle) {
-		model.vertices.push_back(triangle.v0);
-		model.vertices.push_back(triangle.v1);
-		model.vertices.push_back(triangle.v2);
-	};
-
 	// build top
-	insertTriangle(Triangle(rtf, rtr, ltr, color));
-	insertTriangle(Triangle(ltr, ltf, rtf, color));
+	insertTriangle(model, Triangle(rtf, rtr, ltr, color));
+	insertTriangle(model, Triangle(ltr, ltf, rtf, color));
 
 	// build bottom
-	insertTriangle(Triangle(rbf, lbf, lbr, color));
-	insertTriangle(Triangle(lbr, rbr, rbf, color));
+	insertTriangle(model, Triangle(rbf, lbf, lbr, color));
+	insertTriangle(model, Triangle(lbr, rbr, rbf, color));
 
 	// build front (actually this is the rear I messed up the z coords)
-	insertTriangle(Triangle(rtf, ltf, lbf, color));
-	insertTriangle(Triangle(lbf, rbf, rtf, color));
+	insertTriangle(model, Triangle(rtf, ltf, lbf, color));
+	insertTriangle(model, Triangle(lbf, rbf, rtf, color));
 
 	// build rear (actually this is the front I messed up the z coords)
 	glm::vec3 red = glm::vec3(0.4f, 0.0f, 0.0f); // make the front red temporarily
-	insertTriangle(Triangle(rtr, rbr, lbr, red));
-	insertTriangle(Triangle(lbr, ltr, rtr, red));
+	insertTriangle(model, Triangle(rtr, rbr, lbr, red));
+	insertTriangle(model, Triangle(lbr, ltr, rtr, red));
 
 	// build left
-	insertTriangle(Triangle(ltf, ltr, lbr, color));
-	insertTriangle(Triangle(lbr, lbf, ltf, color));
+	insertTriangle(model, Triangle(ltf, ltr, lbr, color));
+	insertTriangle(model, Triangle(lbr, lbf, ltf, color));
 
 	// build right
-	insertTriangle(Triangle(rtf, rbf, rbr, color));
-	insertTriangle(Triangle(rbr, rtr, rtf, color));
+	insertTriangle(model, Triangle(rtf, rbf, rbr, color));
+	insertTriangle(model, Triangle(rbr, rtr, rtf, color));
 
 	return model;
+}
+
+Model Model::createIcosahedron() {
+	float p = (sqrt(5) - 1) / 2;
+
+	glm::vec3 x1{0, -p, 1};
+	glm::vec3 x2{0, p, 1};
+	glm::vec3 x3{0, p, -1};
+	glm::vec3 x4{0, -p, -1};
+
+	glm::vec3 y1{1, 0, p};
+	glm::vec3 y2{1, 0, -p};
+	glm::vec3 y3{-1, 0, -p};
+	glm::vec3 y4{-1, 0, p};
+
+	glm::vec3 z1{-p, 1, 0};
+	glm::vec3 z2{p, 1, 0};
+	glm::vec3 z3{p, -1, 0};
+	glm::vec3 z4{-p, -1, 0};
+
+	Model model;
+	
+	glm::vec3 color{1.0f, 0.5f, 0.5f};
+
+	insertTriangle(model, Triangle(z1, y3, y4, color));
+	insertTriangle(model, Triangle(z1, x3, y3, color));
+	insertTriangle(model, Triangle(z1, z2, x3, color));
+	insertTriangle(model, Triangle(z1, x2, z2, color));
+	insertTriangle(model, Triangle(z1, y4, x2, color));
+
+	insertTriangle(model, Triangle(y4, y3, z4, color));
+	insertTriangle(model, Triangle(z4, y3, x4, color));
+	insertTriangle(model, Triangle(y3, x3, x4, color));
+	insertTriangle(model, Triangle(x4, x3, y2, color));
+	insertTriangle(model, Triangle(x3, z2, y2, color));
+	insertTriangle(model, Triangle(y2, z2, y1, color));
+	insertTriangle(model, Triangle(z2, x2, y1, color));
+	insertTriangle(model, Triangle(y1, x2, x1, color));
+	insertTriangle(model, Triangle(x2, y4, x1, color));
+	insertTriangle(model, Triangle(x1, y4, z4, color));
+
+	insertTriangle(model, Triangle(z3, y2, y1, color));
+	insertTriangle(model, Triangle(z3, y1, x1, color));
+	insertTriangle(model, Triangle(z3, x1, z4, color));
+	insertTriangle(model, Triangle(z3, z4, x4, color));
+	insertTriangle(model, Triangle(z3, x4, y2, color));
+
+	return model;
+}
+
+glm::vec3 midpoint(glm::vec3 p0, glm::vec3 p1) {
+	return glm::vec3(
+			(p0.x + p1.x) / 2,
+			(p0.y + p1.y) / 2,
+			(p0.z + p1.z) / 2);
+}
+
+Model subdivide(Model original) {
+	Model new_model;
+	glm::vec3 color{1.0, 0.5, 0.5};
+
+	float length = glm::length(original.vertices[0].position);
+
+	for (int i = 0; i < original.vertices.size(); i += 3) {
+		glm::vec3 v0 = original.vertices[i].position;
+		glm::vec3 v1 = original.vertices[i + 1].position;
+		glm::vec3 v2 = original.vertices[i + 2].position;
+
+		glm::vec3 v01 = midpoint(v0, v1) * length;
+		glm::vec3 v12 = midpoint(v1, v2) * length;
+		glm::vec3 v20 = midpoint(v2, v0) * length;
+
+		insertTriangle(new_model, Triangle(v0, v01, v20, color));
+		insertTriangle(new_model, Triangle(v01, v1, v12, color));
+		insertTriangle(new_model, Triangle(v20, v12, v2, color));
+		insertTriangle(new_model, Triangle(v01, v12, v20, color));
+	}
+
+	// make the vertex normals point away from the center of the ball, rather
+	// than aligned to the triangle
+	for (int i = 0; i < original.vertices.size(); i++) {
+		Vertex& vert = original.vertices[i];
+		vert.normal = glm::normalize(vert.position);
+	}
+
+	return new_model;
 }
 
 Model Model::createFromOBJ(

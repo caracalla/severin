@@ -58,7 +58,8 @@ void main() {
   vec3 normal = inverse(transpose(mat3(modelMatrix))) * normalize(vertexNormal);
 
   float min_light = 0.2f;
-  float light_intensity = max(dot(light_dir, normal), min_light);
+  // float light_intensity = max(dot(light_dir, normal), min_light);
+  float light_intensity = max(dot(vec3(1.0, 1.0, 1.0), normal), min_light);
 
   outColor = vertexColor * light_intensity;
   texCoord = vertexUV;

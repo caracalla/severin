@@ -13,6 +13,7 @@ add_executable(severin
   entity.h
   collision.h
   scene.h
+  scene.cpp
   renderer.h)
 
 target_include_directories(severin PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

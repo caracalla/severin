@@ -14,15 +14,22 @@ layout (location = 0) out vec4 outFragColor;
 // } scene;
 
 layout (push_constant) uniform constants {
-  float time;
-  vec2 resolution;
+  float time_elapsed;
+  float resolution_x;
+  float resolution_y;
 } PushConstants;
 
-#define u_time PushConstants.time
-#define normalized_fragcoord (gl_FragCoord.xy / PushConstants.resolution)
+#define time PushConstants.time_elapsed
+#define fragCoord_norm gl_FragCoord.xy / vec2(PushConstants.resolution_x, PushConstants.resolution_y)
 
 #define PI 3.14159265
 
+float random (vec2 st) {
+  return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+}
+
 void main() {
-  outFragColor = vec4(inColor, 1.0f);
+  vec3 color = inColor;
+
+  outFragColor = vec4(color, 1.0f);
 }

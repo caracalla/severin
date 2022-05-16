@@ -39,6 +39,42 @@ struct Camera {
 	}
 };
 
+struct Scene;
+
+
+struct PlayableEntity : public DynamicEntity {
+	glm::vec3 eye_position; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
+	glm::vec3 view_rotation;
+	uint16_t projectile_model_id;
+	float cooldown_remaining = 0.0f;
+
+	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
+	static constexpr float kSprintFactor = 3.0f;
+	static constexpr float kAccelerationFactor = 10.0f;
+	static constexpr float kWeaponCooldownSec = 0.2f;
+
+	PlayableEntity(
+			uint16_t mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation,
+			float scale,
+			float mass,
+			glm::vec3 eye_position,
+			uint16_t projectile_model_id) :
+					DynamicEntity(mesh_id, material_id, position, rotation, scale, mass),
+					eye_position(eye_position),
+					view_rotation(rotation),
+					projectile_model_id(projectile_model_id) {}
+
+	void moveFromInputs(
+    const float dt_sec,
+    const Input::ButtonStates button_states,
+    const Input::MouseState mouse_state,
+    Scene* scene);
+};
+
+
 struct Scene {
 	// TODO: limit the size of the entity arrays to this total value
 	static constexpr int kMaxEntities = 4096;
@@ -64,14 +100,36 @@ struct Scene {
 			entity.move(dt_sec);
 
 			entity.is_on_ground = false;
+
+			// player specific crap, should remove
+			glm::vec3 sphere_current_pos = entity.position;
+			sphere_current_pos.y += entity.collision.shape.sphere.radius;
+
 			for (auto static_ent : static_entities) {
-				entity.collideWith(static_ent); // may set entity.is_on_ground back to true
+				// may set entity.is_on_ground back to true
+				entity.collideWith(static_ent, sphere_current_pos);
+			}
+
+			// update collision
+			Sphere& sphere = entity.collision.shape.sphere;
+			sphere.center_start = sphere_current_pos;
+			entity.position.y -= sphere.radius; // player specific crap, should remove
+		}
+
+
+		for (auto& entity : dynamic_entities) {
+			entity.applyAcceleration(gravity_acceleration);
+			entity.move(dt_sec);
+
+			entity.is_on_ground = false;
+			for (auto static_ent : static_entities) {
+				// may set entity.is_on_ground back to true
+				entity.collideWith(static_ent, entity.position);
 			}
 
 			// update collision
 			Sphere& sphere = entity.collision.shape.sphere;
 			sphere.center_start = entity.position;
-			sphere.center_start.y += sphere.radius;
 		}
 	}
 
@@ -86,9 +144,15 @@ struct Scene {
 		dt_sec = std::min(dt_sec, 0.02f);
 
 		// update velocity, but not position
-		player.moveFromInputs(dt_sec, button_states, mouse_state);
+		player.moveFromInputs(dt_sec, button_states, mouse_state, this);
 
 		applyPhysics(dt_sec);
+
+		if (player.position.y < -40.0f) {
+			// warp to a high-ish point if you go far enough down
+			player.position.y = 10;
+			player.velocity.y = 0.0f; // -420.0f;
+		}
 
 		static bool third_person_cam = false;
 
@@ -118,7 +182,7 @@ struct Scene {
 		static_entities.emplace_back(mesh_id, material_id, position, rotation, scale);
 	}
 
-	void addDynamicEntity(
+	DynamicEntity* addDynamicEntity(
 			uint16_t mesh_id,
 			uint16_t material_id,
 			glm::vec3 position,
@@ -126,6 +190,7 @@ struct Scene {
 			float scale,
 			float mass) {
 		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation, scale, mass);
+		return &(dynamic_entities.back());
 	}
 
 	void addPlayableEntity(
@@ -135,8 +200,17 @@ struct Scene {
 			glm::vec3 rotation,
 			float scale,
 			glm::vec3 eye_position,
-			float mass) {
-		playable_entities.emplace_back(mesh_id, material_id, position, rotation, scale, mass, eye_position);
+			float mass,
+			uint16_t projectile_model_id) {
+		playable_entities.emplace_back(
+				mesh_id,
+				material_id,
+				position,
+				rotation,
+				scale,
+				mass,
+				eye_position,
+				projectile_model_id);
 	}
 
 	const Entity* getNextEntity(int entity_index) const {

@@ -24,5 +24,5 @@ struct Engine {
 		return _window_handler->isRunning();
 	}
 
-	void run();
+	void run(int frames_to_run);
 };

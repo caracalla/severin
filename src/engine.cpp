@@ -39,6 +39,11 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	int player_fighter_num = 0;
 	float fighter_mass = 72.0f;
 
+	// set up projectile model
+	Model projectile_model = Model::createIcosahedron();
+	projectile_model = subdivide(projectile_model);
+	uint16_t projectile_model_id = _renderer->uploadModel(projectile_model);
+
 	for (const auto& fighter : level.fighters) {
 		uint16_t model_id = _renderer->uploadModel(fighter.model);
 
@@ -55,21 +60,50 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 				fighter.rotation,
 				1.0f, // scale
 				fighter_eye_position,
-				fighter_mass);
+				fighter_mass,
+				projectile_model_id);
 
 		PlayableEntity& ent = _scene->playable_entities.back();
 		float radius = fighter.dimensions.height / 2;
 		ent.initCollision(radius);
+		// ent.velocity.y = -420.0f;
 	}
 
 	_scene->player_entity_index = player_fighter_num;
+
+	// add building model
+	Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
+	glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
+	uint16_t model_id = _renderer->uploadModel(model);
+	_scene->addStaticEntity(
+				model_id,
+				default_material_id,
+				building_pos,
+				glm::vec3(0.0f), // rotation
+				1.0f); // scale
+
+	// add icosahedron model
+	Model icosa_model = Model::createIcosahedron();
+	icosa_model = subdivide(icosa_model);
+	glm::vec3 icosa_pos{0.0, 2.0, -5.0};
+	uint16_t icosa_model_id = _renderer->uploadModel(icosa_model);
+	DynamicEntity* ball_ent = _scene->addDynamicEntity(
+				icosa_model_id,
+				default_material_id,
+				icosa_pos,
+				glm::vec3(0.0f), // rotation
+				1.0f, // scale
+				0.0f); // mass
+
+	// no point to this yet
+	// ball_ent->initCollision(1.0f);
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 
 	return true;
 }
 
-void Engine::run() {
+void Engine::run(int frames_to_run) {
 	using namespace std::chrono;
 
 	steady_clock::time_point frame_start =
@@ -80,6 +114,8 @@ void Engine::run() {
 
 	// do a scene step just to get things set up (like the camera)
 	_scene->step(kMinFrameTime, Input::ButtonStates{}, Input::MouseState{});
+
+	int frame_count = 0;
 
 	while (isRunning()) {
 		// draw current scene
@@ -109,6 +145,11 @@ void Engine::run() {
 
 		// handle movement and stuff
 		_scene->step(frame_duration, button_states, mouse_state);
+		
+		frame_count++;
+		if (frames_to_run > 0 && frame_count > frames_to_run) {
+			break;
+		}
 	}
 
 	_renderer->cleanup();

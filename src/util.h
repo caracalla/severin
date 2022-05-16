@@ -22,4 +22,6 @@ namespace util {
 	float getElapsedTime();
 
 	constexpr static float kEpsilon = 0.0001f;
+
+	bool isVectorZero(glm::vec3 vec);
 }

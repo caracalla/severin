@@ -8,25 +8,61 @@
 #include <cstdlib>
 
 
-int main(int argc, char* argv[]) {
-	util::init();
+void printUsage() {
+	printf("usage: severin [-w window_width] [-h window_height] [-f frames_to_run]\n");
+	exit(0);
+}
 
+struct ArgumentOptions {
 	int window_width = kDefaultWindowWidth;
 	int window_height = kDefaultWindowHeight;
+	int frames_to_run = 0; // set to non-zero to debug
+};
 
-	// input arg parsing
-	if (argc > 1) {
-		if (argc == 3) {
-			window_width = atoi(argv[1]);
-			window_height = atoi(argv[2]);
+ArgumentOptions parseArguments(int argc, char* argv[]) {
+	ArgumentOptions options;
+
+	for (int i = 1; i < argc; i++) {
+		std::string arg = std::string(argv[i]);
+
+		if (arg == "-w") {
+			i += 1;
+			if (i < argc) {
+				options.window_width = atoi(argv[i]);
+			} else {
+				printUsage();
+			}
+		} else if (arg == "-h") {
+			i += 1;
+			if (i < argc) {
+				options.window_height = atoi(argv[i]);
+			} else {
+				printUsage();
+			}
+		} else if (arg == "-f") {
+			i += 1;
+			if (i < argc) {
+				options.frames_to_run = atoi(argv[i]);
+				util::log("only running for %d frames", options.frames_to_run);
+			} else {
+				printUsage();
+			}
 		} else {
-			printf("usage: severin [window_width window_height]\n");
-			return EXIT_SUCCESS;
+			printUsage();
 		}
 	}
 
+	return options;
+}
+
+
+int main(int argc, char* argv[]) {
+	util::init();
+
+	ArgumentOptions options = parseArguments(argc, argv);
+
 	// setup
-	WindowHandler window_handler(window_width, window_height);
+	WindowHandler window_handler(options.window_width, options.window_height);
 	Renderer renderer(&window_handler);
 
 	if (!renderer.init()) {
@@ -34,7 +70,8 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	float aspect_ratio = static_cast<float>(window_width) / window_height;
+	float aspect_ratio =
+			static_cast<float>(options.window_width) / options.window_height;
 	Camera camera(aspect_ratio);
 	Scene scene(camera);
 	Engine engine(&window_handler, &scene, &renderer);
@@ -48,7 +85,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// let's go!
-	engine.run();
+	engine.run(options.frames_to_run);
 
 	util::log("all done");
 

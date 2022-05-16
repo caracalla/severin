@@ -1,5 +1,7 @@
 #include <util.h>
 
+#include <glm/gtc/epsilon.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -123,4 +125,8 @@ float util::getElapsedTime() {
 
 	return std::chrono::duration<float, std::chrono::seconds::period>(
 			currentTime - startTime).count();
+}
+
+bool util::isVectorZero(glm::vec3 vec) {
+	return glm::all(glm::epsilonEqual(vec, glm::vec3(0.0f), util::kEpsilon));
 }
