@@ -2,6 +2,7 @@
 
 #include <glm/gtc/epsilon.hpp>
 
+#include <cstdarg>
 #include <fstream>
 #include <iostream>
 #include <random>

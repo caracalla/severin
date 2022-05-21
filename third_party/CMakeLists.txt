@@ -35,12 +35,14 @@ target_link_libraries(vkbootstrap PUBLIC Vulkan::Vulkan $<$<BOOL:UNIX>:${CMAKE_D
 
 # sdl2
 add_library(sdl2 INTERFACE)
-set(sdl2_DIR "SDL_PATH" CACHE PATH "/opt/homebrew/Cellar/sdl2/2.0.16")
 
 if (WIN32)
+# obviously this is for my own Windows setup, adjust as needed
+set(sdl2_DIR "C:/Users/james/source/sdl_dev" CACHE PATH "path to your SDL installation")
 target_include_directories(sdl2 INTERFACE ${sdl2_DIR}/include ${sdl2_image_DIR}/include)
 target_link_directories(sdl2 INTERFACE ${sdl2_DIR}/lib/x64 ${sdl2_image_DIR}/lib/x64)
 elseif (UNIX)
+set(sdl2_DIR "SDL_PATH" CACHE PATH "path to your SDL installation")
 target_include_directories(sdl2 INTERFACE ${sdl2_DIR}/include/SDL2 ${sdl2_image_DIR}/include/SDL2)
 target_link_directories(sdl2 INTERFACE ${sdl2_DIR}/lib ${sdl2_image_DIR}/lib)
 endif()

@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 
 
 void printUsage() {
@@ -77,7 +78,14 @@ int main(int argc, char* argv[]) {
 	Engine engine(&window_handler, &scene, &renderer);
 
 	// load level
-	std::string level_file = "assets/basic.level";
+#ifdef _MSC_VER
+// on windows, the exe is always run from its own place (the bin dir)
+	std::filesystem::path project_root = std::filesystem::current_path().parent_path();
+#else
+// this is because on macOS I do `make && bin/severin`, so current path is just the project root
+	std::filesystem::path project_root = std::filesystem::current_path();
+#endif
+	std::string level_file = project_root.string() + "/assets/basic.level";
 
 	if (!engine.loadLevelFile(level_file)) {
 		util::logError("failed to load level %s", level_file.c_str());

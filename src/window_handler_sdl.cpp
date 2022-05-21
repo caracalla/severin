@@ -1,7 +1,12 @@
 #include <window_handler.h>
 
+#ifdef _MSC_VER
+#include <SDL.h>
+#include <SDL_vulkan.h>
+#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+#endif
 
 
 struct SDL_Window* sdl_window{ nullptr };
