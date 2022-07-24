@@ -24,15 +24,15 @@ struct WindowHandler {
 	WindowHandler(int width, int height);
 	void cleanup();
 
-	bool isRunning() {
+	const bool isRunning() const {
 		return _is_running;
 	}
 
-	std::vector<const char*> getRequiredExtensions();
+	const std::vector<const char*> getRequiredExtensions() const;
 
-	bool createSurface(VkInstance instance, VkSurfaceKHR* surface);
+	const bool createSurface(VkInstance instance, VkSurfaceKHR* surface) const;
 
 	void handleInput();
-	Input::ButtonStates getButtonStates();
-	Input::MouseState getMouseState();
+	const Input::ButtonStates getButtonStates() const;
+	const Input::MouseState getMouseState() const;
 };

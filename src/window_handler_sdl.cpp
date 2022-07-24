@@ -39,7 +39,7 @@ void WindowHandler::cleanup() {
 	SDL_DestroyWindow(sdl_window);
 }
 
-std::vector<const char*> WindowHandler::getRequiredExtensions() {
+const std::vector<const char*> WindowHandler::getRequiredExtensions() const {
 	unsigned int count;
 	SDL_Vulkan_GetInstanceExtensions(sdl_window, &count, nullptr);
 
@@ -51,7 +51,7 @@ std::vector<const char*> WindowHandler::getRequiredExtensions() {
 	return extensions;
 }
 
-bool WindowHandler::createSurface(VkInstance instance, VkSurfaceKHR* surface) {
+const bool WindowHandler::createSurface(VkInstance instance, VkSurfaceKHR* surface) const {
 	SDL_bool result = SDL_Vulkan_CreateSurface(sdl_window, instance, surface);
 
 	return result == SDL_TRUE;
@@ -169,10 +169,10 @@ void WindowHandler::handleInput() {
 	}
 }
 
-Input::ButtonStates WindowHandler::getButtonStates() {
+const Input::ButtonStates WindowHandler::getButtonStates() const {
 	return _button_states;
 }
 
-Input::MouseState WindowHandler::getMouseState() {
+const Input::MouseState WindowHandler::getMouseState() const {
 	return _mouse_state;
 }

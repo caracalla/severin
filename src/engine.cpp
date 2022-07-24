@@ -9,7 +9,7 @@
 #include <thread>
 
 
-bool Engine::loadLevelFile(const std::string& level_filename) {
+const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	std::ifstream level_file(level_filename);
 	Level level = Level::loadFromFile(level_filename);
 
@@ -104,7 +104,7 @@ bool Engine::loadLevelFile(const std::string& level_filename) {
 	return true;
 }
 
-void Engine::run(int frames_to_run) {
+void Engine::run(const int frames_to_run) {
 	using namespace std::chrono;
 
 	steady_clock::time_point frame_start =
@@ -141,8 +141,8 @@ void Engine::run(int frames_to_run) {
 
 		// get inputs
 		_window_handler->handleInput();
-		Input::ButtonStates button_states = _window_handler->getButtonStates();
-		Input::MouseState mouse_state = _window_handler->getMouseState();
+		const Input::ButtonStates button_states = _window_handler->getButtonStates();
+		const Input::MouseState mouse_state = _window_handler->getMouseState();
 
 		// handle movement and stuff
 		_scene->step(frame_duration, button_states, mouse_state);

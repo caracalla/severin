@@ -10,11 +10,11 @@ struct Renderer {
 
 	Renderer(WindowHandler* window_handler);
 
-	bool init();
+	const bool init() const;
 
-	ModelID uploadModel(const Model model);
+	const ModelID uploadModel(const Model model) const;
 
-	void draw(const Scene* const scene);
+	void draw(const Scene* const scene) const;
 
-	void cleanup();
+	void cleanup() const;
 };

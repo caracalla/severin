@@ -36,6 +36,9 @@ struct Entity { // 64 bytes total
 struct DynamicEntity : public Entity {
 	glm::vec3 velocity{0.0f};
 	glm::vec3 force{0.0f};
+	glm::vec3 last_acceleration{0.0f}; // for verlet integration in move()
+	glm::vec3 angular_velocity{0.0f};
+	glm::vec3 torque{0.0f};
 	float mass;
 	float springiness = 0.0f;
 	bool is_on_ground = true;
@@ -66,24 +69,27 @@ struct DynamicEntity : public Entity {
 	}
 
 	void move(const float dt_sec) {
+		position += velocity * dt_sec + (0.5f * last_acceleration * dt_sec * dt_sec);
+
 		if (mass > 0.0f) {
-			velocity += force * dt_sec / mass;
+			glm::vec3 new_acceleration = force / mass;
+			glm::vec3 average_acceleration = (last_acceleration + new_acceleration) / 2.0f;
+			velocity += average_acceleration * dt_sec;
 		}
 
-		position += velocity * dt_sec;
 		force = glm::vec3(0.0f);
 	}
 
-	glm::vec3 collideWith(Entity other_entity, glm::vec3& sphere_center_end) {
+	const glm::vec3 collideWith(const Entity other_entity, glm::vec3& sphere_center_end) {
 		// assume this has sphere and static ent has aabb
-		Collision::Type other_ent_type = other_entity.collision.type;
+		const Collision::Type other_ent_type = other_entity.collision.type;
 		Sphere& sphere = collision.shape.sphere;
 		glm::vec3 new_position = sphere_center_end;
 
 		if (other_ent_type == Collision::Type::none) {
 			// do nothing
 		} else if (other_ent_type == Collision::Type::aabb) {
-			AABB& box = other_entity.collision.shape.box;
+			const AABB& box = other_entity.collision.shape.box;
 
 			glm::vec3 collision_point;
 			bool did_collide = Collision::sphereVsAABB(sphere, sphere_center_end, box, collision_point);
@@ -124,7 +130,7 @@ struct DynamicEntity : public Entity {
 				velocity = orthogonal - parallel * springiness;
 			}
 		} else if (other_ent_type == Collision::Type::sphere) {
-			Sphere& other_sphere = other_entity.collision.shape.sphere;
+			const Sphere& other_sphere = other_entity.collision.shape.sphere;
 
 			glm::vec3 separation = sphere_center_end - other_sphere.center_start;
 			glm::vec3 collision_direction;

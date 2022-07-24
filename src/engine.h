@@ -18,11 +18,11 @@ struct Engine {
 			_scene(scene),
 			_renderer(renderer) {};
 
-	bool loadLevelFile(const std::string& filename);
+	const bool loadLevelFile(const std::string& filename) const;
 
 	bool isRunning() {
 		return _window_handler->isRunning();
 	}
 
-	void run(int frames_to_run);
+	void run(const int frames_to_run);
 };
