@@ -47,6 +47,7 @@ struct PlayableEntity : public DynamicEntity {
 	glm::vec3 view_rotation;
 	ModelID projectile_model_id;
 	float cooldown_remaining = 0.0f;
+	Entity* pointer_ent = nullptr;
 
 	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
 	static constexpr float kSprintFactor = 3.0f;
@@ -72,6 +73,21 @@ struct PlayableEntity : public DynamicEntity {
     const Input::ButtonStates button_states,
     const Input::MouseState mouse_state,
     Scene* scene);
+
+	void shootBall(const float dt_sec, Scene* scene);
+	void applyForceOnBox(Scene* scene);
+	void resetPointer();
+
+	const glm::vec3 viewDirection() const {
+		constexpr glm::vec4 kDefaultView{0.0, 0.0, -1.0f, 0.0f};
+
+		glm::mat4 direction_rotation =
+				glm::rotate(glm::mat4(1.0f), -view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		direction_rotation =
+				glm::rotate(direction_rotation, -view_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+
+		return glm::vec3(direction_rotation * kDefaultView);
+	}
 };
 
 
@@ -92,6 +108,10 @@ struct Scene {
 		return playable_entities[player_entity_index];
 	}
 
+	// physics works as follows:
+	// move dynamic objects
+	// collide each with static objects
+	// collide with each other
 	void applyPhysics(const float dt_sec) {
 		constexpr glm::vec3 gravity_acceleration{0.0f, -9.8f, 0.0f};
 
@@ -172,8 +192,8 @@ struct Scene {
 	}
 
 	Entity* addStaticEntity(
-			ModelID mesh_id,
-			uint16_t material_id,
+			const ModelID mesh_id,
+			const uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale) {
@@ -183,8 +203,8 @@ struct Scene {
 	}
 
 	DynamicEntity* addDynamicEntity(
-			ModelID mesh_id,
-			uint16_t material_id,
+			const ModelID mesh_id,
+			const uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale,
@@ -194,15 +214,15 @@ struct Scene {
 		return &(dynamic_entities.back());
 	}
 
-	void addPlayableEntity(
-			ModelID mesh_id,
-			uint16_t material_id,
+	PlayableEntity* addPlayableEntity(
+			const ModelID mesh_id,
+			const uint16_t material_id,
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale,
 			glm::vec3 eye_position,
 			float mass,
-			ModelID projectile_model_id) {
+			const ModelID projectile_model_id) {
 		playable_entities.emplace_back(
 				mesh_id,
 				material_id,
@@ -212,6 +232,8 @@ struct Scene {
 				mass,
 				eye_position,
 				projectile_model_id);
+		
+		return &(playable_entities.back());
 	}
 
 	const Entity* getNextEntity(int entity_index) const {

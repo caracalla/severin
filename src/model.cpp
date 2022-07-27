@@ -101,7 +101,7 @@ Model Model::createHexahedron(float width, float height, float depth, glm::vec3 
 	return model;
 }
 
-Model Model::createIcosahedron() {
+Model Model::createIcosahedron(glm::vec3 color) {
 	float p = (sqrt(5) - 1) / 2;
 
 	glm::vec3 x1{0, -p, 1};
@@ -120,8 +120,6 @@ Model Model::createIcosahedron() {
 	glm::vec3 z4{-p, -1, 0};
 
 	Model model;
-	
-	glm::vec3 color{1.0f, 0.5f, 0.5f};
 
 	insertTriangle(model, Triangle(z1, y3, y4, color));
 	insertTriangle(model, Triangle(z1, x3, y3, color));
@@ -156,9 +154,8 @@ glm::vec3 midpoint(glm::vec3 p0, glm::vec3 p1) {
 			(p0.z + p1.z) / 2);
 }
 
-Model subdivide(Model original) {
+Model subdivide(Model original, glm::vec3 color) {
 	Model new_model;
-	glm::vec3 color{1.0, 0.5, 0.5};
 
 	float length = glm::length(original.vertices[0].position);
 

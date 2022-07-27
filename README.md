@@ -21,11 +21,11 @@ bin/severin
 8. `severin.exe`
 
 ## TODO
-* make a ModelID alias for uint16_t
+* make a MaterialID alias for uint16_t
 * un-inherit entities from each other
 * make EntityManager
-* make the position for any entity its circumcenter (is that wise?)
+* make the position for any entity its circumcenter (is that wise?  apparently not?  look up what dan said)
 * avoid copying Model objects (unique pointers?)
 * collisions - can still pass through walls if going fast enough
-  * ray test?
+  * ray test
 * make player class?

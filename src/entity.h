@@ -36,9 +36,8 @@ struct Entity { // 64 bytes total
 struct DynamicEntity : public Entity {
 	glm::vec3 velocity{0.0f};
 	glm::vec3 force{0.0f};
-	glm::vec3 last_acceleration{0.0f}; // for verlet integration in move()
-	glm::vec3 angular_velocity{0.0f};
-	glm::vec3 torque{0.0f};
+	// glm::vec3 angular_velocity{0.0f};
+	// glm::vec3 torque{0.0f};
 	float mass;
 	float springiness = 0.0f;
 	bool is_on_ground = true;
@@ -51,7 +50,7 @@ struct DynamicEntity : public Entity {
 			float scale,
 			float mass) : Entity(mesh_id, material_id, position, rotation, scale), mass(mass) {}
 
-	void initCollision(float radius) {
+	void initCollision(const float radius) {
 		collision.type = Collision::Type::sphere;
 
 		collision.shape.sphere.radius = radius;
@@ -60,23 +59,20 @@ struct DynamicEntity : public Entity {
 		collision.shape.sphere.center_start = sphere_pos;
 	}
 
-	void applyForce(glm::vec3 new_force) {
+	void applyForce(const glm::vec3 new_force) {
 		force += new_force;
 	}
 
-	void applyAcceleration(glm::vec3 acceleration) {
+	void applyAcceleration(const glm::vec3 acceleration) {
 		force += acceleration * mass;
 	}
 
 	void move(const float dt_sec) {
-		position += velocity * dt_sec + (0.5f * last_acceleration * dt_sec * dt_sec);
-
 		if (mass > 0.0f) {
-			glm::vec3 new_acceleration = force / mass;
-			glm::vec3 average_acceleration = (last_acceleration + new_acceleration) / 2.0f;
-			velocity += average_acceleration * dt_sec;
+			velocity += force * dt_sec / mass;
 		}
 
+		position += velocity * dt_sec;
 		force = glm::vec3(0.0f);
 	}
 

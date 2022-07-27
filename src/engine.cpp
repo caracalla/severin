@@ -20,19 +20,37 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	uint16_t default_material_id = 0; // placeholder
 
+	// add the spinny box
+	{
+		glm::vec3 pos{5.0f, 1.5f, -5.0f};
+		float size = 2.0f;
+		glm::vec3 dims{size, size, size};
+		Model model = Model::createHexahedron(dims.x, dims.y, dims.z);
+		ModelID model_id = _renderer->uploadModel(model);
+
+		Entity* ent = _scene->addStaticEntity(
+				model_id,
+				default_material_id,
+				pos,
+				glm::vec3(0.0f), // rotation
+				1.0f); // scale
+		ent->collision.type = Collision::Type::aabb;
+		ent->collision.shape.box.min_pos = pos - dims / 2.0f;
+		ent->collision.shape.box.max_pos = pos + dims / 2.0f;
+	}
+
 	for (const auto& platform : level.platforms) {
 		ModelID model_id = _renderer->uploadModel(platform.model);
-		_scene->addStaticEntity(
+
+		Entity* ent = _scene->addStaticEntity(
 				model_id,
 				default_material_id,
 				platform.position,
 				glm::vec3(0.0f), // rotation
 				1.0f); // scale
-
-		Entity& ent = _scene->static_entities.back();
-		ent.collision.type = Collision::Type::aabb;
-		ent.collision.shape.box.min_pos = platform.start_pos;
-		ent.collision.shape.box.max_pos = platform.end_pos;
+		ent->collision.type = Collision::Type::aabb;
+		ent->collision.shape.box.min_pos = platform.start_pos;
+		ent->collision.shape.box.max_pos = platform.end_pos;
 	}
 
 	// just default to the first fighter as the player for now
@@ -53,7 +71,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 						fighter.dimensions.eye_height,
 						0.0f);
 
-		_scene->addPlayableEntity(
+		PlayableEntity* ent = _scene->addPlayableEntity(
 				model_id,
 				default_material_id,
 				fighter.position,
@@ -62,42 +80,56 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 				fighter_eye_position,
 				fighter_mass,
 				projectile_model_id);
-
-		PlayableEntity& ent = _scene->playable_entities.back();
 		float radius = fighter.dimensions.height / 2;
-		ent.initCollision(radius);
-		// ent.velocity.y = -420.0f;
+		ent->initCollision(radius);
+		// ent->velocity.y = -420.0f;
 	}
 
 	_scene->player_entity_index = player_fighter_num;
 
-	// add building model
-	Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
-	glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
-	ModelID model_id = _renderer->uploadModel(model);
-	_scene->addStaticEntity(
-				model_id,
-				default_material_id,
-				building_pos,
-				glm::vec3(0.0f), // rotation
-				1.0f); // scale
+	// // add building model
+	// Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
+	// glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
+	// ModelID model_id = _renderer->uploadModel(model);
+	// _scene->addStaticEntity(
+	// 			model_id,
+	// 			default_material_id,
+	// 			building_pos,
+	// 			glm::vec3(0.0f), // rotation
+	// 			1.0f); // scale
 
-	// add icosahedron model
-	Model icosa_model = Model::createIcosahedron();
-	icosa_model = subdivide(icosa_model);
-	glm::vec3 icosa_pos{0.0, 2.0, -5.0};
+	// // add icosahedron model
+	// Model icosa_model = Model::createIcosahedron();
+	// icosa_model = subdivide(icosa_model);
+	// glm::vec3 icosa_pos{0.0, 2.0, -5.0};
+	// ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
+	// Entity* ball_ent = _scene->addStaticEntity(
+	// 			icosa_model_id,
+	// 			default_material_id,
+	// 			icosa_pos,
+	// 			glm::vec3(0.0f), // rotation
+	// 			1.0f); // scale
+	// // set up icosahedron collision
+	// ball_ent->collision.type = Collision::Type::sphere;
+	// ball_ent->collision.shape.sphere.radius = 1.0f;
+	// ball_ent->collision.shape.sphere.center_start = icosa_pos;
+
+	PlayableEntity& player = _scene->getPlayer();
+
+	util::log("adding the thing");
+	// add pointer model
+	glm::vec3 icosa_color{1.0f, 0.0f, 0.0f};
+	Model icosa_model = Model::createIcosahedron(icosa_color);
+	icosa_model = subdivide(icosa_model, icosa_color);
+	glm::vec3 icosa_pos = player.position + player.eye_position;
 	ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
 	Entity* ball_ent = _scene->addStaticEntity(
 				icosa_model_id,
 				default_material_id,
 				icosa_pos,
 				glm::vec3(0.0f), // rotation
-				1.0f); // scale
-
-	// set up icosahedron collision
-	ball_ent->collision.type = Collision::Type::sphere;
-	ball_ent->collision.shape.sphere.radius = 1.0f;
-	ball_ent->collision.shape.sphere.center_start = icosa_pos;
+				0.01f); // scale
+	player.pointer_ent = ball_ent;
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 

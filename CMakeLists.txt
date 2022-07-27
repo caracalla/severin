@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 # endif()
 
 if (NOT WIN32)
-  set(CMAKE_CXX_FLAGS "-Wno-nullability-completeness") # vk_mem_alloc.h
+  set(CMAKE_CXX_FLAGS "-Wno-nullability-completeness -O0 -g") # vk_mem_alloc.h
 endif()
 
 find_package(Vulkan REQUIRED)

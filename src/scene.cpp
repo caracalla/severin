@@ -1,6 +1,49 @@
 #include <scene.h>
 
 
+void PlayableEntity::shootBall(const float dt_sec, Scene* scene) {
+  if (cooldown_remaining > 0.0f) {
+		cooldown_remaining -= dt_sec;
+    return;
+  }
+
+  cooldown_remaining = kWeaponCooldownSec / 2;
+
+  glm::vec3 projectile_pos = position;
+  projectile_pos.y += 1.0;
+  DynamicEntity* projectile = scene->addDynamicEntity(
+      projectile_model_id,
+      0,
+      projectile_pos,
+      rotation,
+      0.2f,
+      0.0f);
+  projectile->initCollision(0.12f);
+  projectile->springiness = 1.0f;
+  projectile->velocity = viewDirection() * 10.0f;
+}
+
+
+void PlayableEntity::applyForceOnBox(Scene* scene) {
+  Entity& spinny_box = scene->static_entities[0];
+
+  resetPointer();
+  Ray ray{pointer_ent->position, viewDirection()};
+
+  glm::vec3 point;
+  float t_min;
+
+  if (rayAABB(ray, spinny_box.collision.shape.box, t_min, point)) {
+    pointer_ent->position = point;
+    pointer_ent->scale = 0.05f;
+  }
+}
+
+void PlayableEntity::resetPointer() {
+  pointer_ent->position = position + eye_position;
+}
+
+
 void PlayableEntity::moveFromInputs(
     const float dt_sec,
     const Input::ButtonStates button_states,
@@ -110,28 +153,10 @@ void PlayableEntity::moveFromInputs(
   rotation.y = -view_rotation.y;
 
   // shooting stuff
-  if (cooldown_remaining > 0.0f) {
-		cooldown_remaining -= dt_sec;
-	} else if (button_states.action) {
-		cooldown_remaining = kWeaponCooldownSec / 2;
-
-    glm::vec3 projectile_pos = position;
-    projectile_pos.y += 1.0;
-    DynamicEntity* projectile = scene->addDynamicEntity(
-        projectile_model_id,
-        0,
-        projectile_pos,
-        rotation,
-        0.2f,
-        0.0f);
-    projectile->initCollision(0.12f);
-    projectile->springiness = 1.0f;
-
-    glm::mat4 direction_rotation =
-        glm::rotate(glm::mat4(1.0f), -view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    direction_rotation = glm::rotate(direction_rotation, -view_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::vec3 direction = glm::vec3(direction_rotation * glm::vec4(0.0, 0.0, -1.0f, 0.0f));
-
-    projectile->velocity = direction * 10.0f;
+  if (button_states.action) {
+    // shootBall(scene);
+    applyForceOnBox(scene);
+  } else {
+    resetPointer();
   }
 }

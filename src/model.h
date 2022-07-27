@@ -25,10 +25,10 @@ struct Model {
 			float height,
 			float depth,
 			glm::vec3 base_color = glm::vec3(1.0f, 1.0f, 1.0f));
-	static Model createIcosahedron();
+	static Model createIcosahedron(glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f));
 	static Model createFromOBJ(
 			const std::string& asset_basedir,
 			const std::string& file_name);
 };
 
-Model subdivide(Model original);
+Model subdivide(Model original, glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f));
