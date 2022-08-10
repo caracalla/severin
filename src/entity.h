@@ -34,6 +34,9 @@ struct Entity { // 64 bytes total
 					scale(scale) {}
 };
 
+
+using DynamicEntityId = uint16_t;
+
 struct DynamicEntity : public Entity {
 	glm::vec3 velocity{0.0f};
 	glm::vec3 force{0.0f};

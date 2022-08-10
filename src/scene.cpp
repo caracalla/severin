@@ -1,7 +1,12 @@
 #include <scene.h>
 
 
-void PlayableEntity::shootBall(const float dt_sec, Scene* scene) {
+DynamicEntity& PlayableEntity::getEntity() {
+  return scene->dynamic_entities[dynamic_ent_id];
+}
+
+
+void PlayableEntity::shootBall(const float dt_sec) {
   if (cooldown_remaining > 0.0f) {
 		cooldown_remaining -= dt_sec;
     return;
@@ -9,13 +14,14 @@ void PlayableEntity::shootBall(const float dt_sec, Scene* scene) {
 
   cooldown_remaining = kWeaponCooldownSec / 2;
 
-  glm::vec3 projectile_pos = position;
+  DynamicEntity& ent = getEntity();
+  glm::vec3 projectile_pos = ent.position;
   projectile_pos.y += 1.0;
   DynamicEntity* projectile = scene->addDynamicEntity(
       projectile_model_id,
       0,
       projectile_pos,
-      rotation,
+      ent.rotation,
       0.2f,
       0.0f);
   projectile->initCollision(0.12f);
@@ -24,7 +30,7 @@ void PlayableEntity::shootBall(const float dt_sec, Scene* scene) {
 }
 
 
-void PlayableEntity::applyForceOnBox(Scene* scene) {
+void PlayableEntity::applyForceOnBox() {
   Entity& spinny_box = scene->static_entities[0];
 
   resetPointer();
@@ -40,15 +46,14 @@ void PlayableEntity::applyForceOnBox(Scene* scene) {
 }
 
 void PlayableEntity::resetPointer() {
-  pointer_ent->position = position + eye_offset;
+  pointer_ent->position = getEntity().position + eye_offset;
 }
 
 
 void PlayableEntity::moveFromInputs(
     const float dt_sec,
     const Input::ButtonStates button_states,
-    const Input::MouseState mouse_state,
-    Scene* scene) {
+    const Input::MouseState mouse_state) {
   // apply mouse movement to rotation
   view_rotation.x += mouse_state.yOffset; // rotation about x axis
   view_rotation.y += mouse_state.xOffset; // rotation about y axis
@@ -74,7 +79,8 @@ void PlayableEntity::moveFromInputs(
   }
 
   bool movement_input_detected = (desired_direction != glm::vec3{0.0f});
-  bool is_already_moving = abs(velocity.x) > 0.0f || abs(velocity.z) > 0.0f;
+  DynamicEntity& ent = getEntity();
+  bool is_already_moving = abs(ent.velocity.x) > 0.0f || abs(ent.velocity.z) > 0.0f;
 
   float max_speed = kMaxWalkSpeed;
 
@@ -85,7 +91,7 @@ void PlayableEntity::moveFromInputs(
   float scalar_accel = max_speed * kAccelerationFactor;
   float delta_speed = scalar_accel * dt_sec;
 
-  glm::vec3 current_velocity_xz{velocity.x, 0.0f, velocity.z};
+  glm::vec3 current_velocity_xz{ent.velocity.x, 0.0f, ent.velocity.z};
   float current_speed_xz = 0.0f;
 
   if (is_already_moving) {
@@ -95,8 +101,8 @@ void PlayableEntity::moveFromInputs(
   // the meat
   if (!movement_input_detected && current_speed_xz <= delta_speed) {
     // no input, moving slowly enough to just stop
-    velocity.x = 0.0f;
-    velocity.z = 0.0f;
+    ent.velocity.x = 0.0f;
+    ent.velocity.z = 0.0f;
   } else {
     glm::vec3 accel_direction{0.0f};
     glm::vec3 current_direction = glm::normalize(current_velocity_xz);
@@ -105,7 +111,7 @@ void PlayableEntity::moveFromInputs(
       // no input, but moving faster than delta_speed -> accel in direction opposite current_direction
       accel_direction = glm::normalize(current_direction) * -1.0f;
 
-      if (!is_on_ground) {
+      if (!ent.is_on_ground) {
         scalar_accel = 0;
       }
     } else {
@@ -137,26 +143,26 @@ void PlayableEntity::moveFromInputs(
       new_velocity_xz = glm::normalize(new_velocity_xz) * max_speed;
     }
 
-    velocity.x = new_velocity_xz.x;
-    velocity.z = new_velocity_xz.z;
+    ent.velocity.x = new_velocity_xz.x;
+    ent.velocity.z = new_velocity_xz.z;
   }
 
   // jump stuff
-  if (button_states.jump && is_on_ground) {
+  if (button_states.jump && ent.is_on_ground) {
     constexpr float jump_speed = 0.8f;
-    velocity.y += 8.0f;
-    is_on_ground = false;
+    ent.velocity.y += 8.0f;
+    ent.is_on_ground = false;
     util::log("jumping!");
   }
 
   // player model should only rotate about the y axis
-  rotation.y = -view_rotation.y;
+  ent.rotation.y = -view_rotation.y;
 
   // shooting stuff
   if (button_states.action) {
-    // shootBall(scene);
-    applyForceOnBox(scene);
+    // shootBall(dt_sec);
+    applyForceOnBox();
   } else {
-    resetPointer();
+    // resetPointer();
   }
 }

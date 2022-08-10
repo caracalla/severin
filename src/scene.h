@@ -42,7 +42,10 @@ struct Camera {
 struct Scene;
 
 
-struct PlayableEntity : public DynamicEntity {
+
+struct PlayableEntity {
+	DynamicEntityId dynamic_ent_id;
+	Scene* scene; // ugh I don't like doing this yet again
 	glm::vec3 eye_offset; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
 	glm::vec3 view_rotation;
 	ModelID projectile_model_id;
@@ -55,27 +58,26 @@ struct PlayableEntity : public DynamicEntity {
 	static constexpr float kWeaponCooldownSec = 0.2f;
 
 	PlayableEntity(
-			ModelID mesh_id,
-			uint16_t material_id,
-			glm::vec3 position,
-			glm::vec3 rotation,
-			float scale,
-			float mass,
+			DynamicEntityId dynamic_ent_id,
+			Scene* scene,
 			glm::vec3 eye_offset,
+			glm::vec3 view_rotation,
 			ModelID projectile_model_id) :
-					DynamicEntity(mesh_id, material_id, position, rotation, scale, mass),
+					dynamic_ent_id(dynamic_ent_id),
+					scene(scene),
 					eye_offset(eye_offset),
-					view_rotation(rotation),
+					view_rotation(view_rotation),
 					projectile_model_id(projectile_model_id) {}
+
+	DynamicEntity& getEntity();
 
 	void moveFromInputs(
     const float dt_sec,
     const Input::ButtonStates button_states,
-    const Input::MouseState mouse_state,
-    Scene* scene);
+    const Input::MouseState mouse_state);
 
-	void shootBall(const float dt_sec, Scene* scene);
-	void applyForceOnBox(Scene* scene);
+	void shootBall(const float dt_sec);
+	void applyForceOnBox();
 	void resetPointer();
 
 	const glm::vec3 viewDirection() const {
@@ -115,22 +117,6 @@ struct Scene {
 	void applyPhysics(const float dt_sec) {
 		constexpr glm::vec3 gravity_acceleration{0.0f, -9.8f, 0.0f};
 
-		for (auto& entity : playable_entities) {
-			entity.applyAcceleration(gravity_acceleration);
-			entity.move(dt_sec);
-
-			entity.is_on_ground = false;
-
-			for (auto static_ent : static_entities) {
-				// may set entity.is_on_ground back to true
-				entity.position = entity.collideWith(static_ent, entity.position);
-			}
-
-			// update collision
-			Sphere& sphere = entity.collision.shape.sphere;
-			sphere.center_start = entity.position;
-		}
-
 		for (auto& entity : dynamic_entities) {
 			entity.applyAcceleration(gravity_acceleration);
 			entity.move(dt_sec);
@@ -158,14 +144,16 @@ struct Scene {
 		dt_sec = std::min(dt_sec, 0.02f);
 
 		// update velocity, but not position
-		player.moveFromInputs(dt_sec, button_states, mouse_state, this);
+		player.moveFromInputs(dt_sec, button_states, mouse_state);
 
 		applyPhysics(dt_sec);
 
-		if (player.position.y < -40.0f) {
+		// TODO: fix high speed collision and remove
+		DynamicEntity& player_ent = player.getEntity();
+		if (player_ent.position.y < -40.0f) {
 			// warp to a high-ish point if you go far enough down
-			player.position.y = 10;
-			player.velocity.y = 0.0f; // -420.0f;
+			player_ent.position.y = 10;
+			player_ent.velocity.y = 0.0f; // -420.0f;
 		}
 
 		static bool third_person_cam = false;
@@ -180,9 +168,9 @@ struct Scene {
 					glm::rotate(glm::mat4(1.0f), -player.view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 			rotation = glm::rotate(rotation, -player.view_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 			camera_position = glm::vec3(rotation * glm::vec4(camera_position, 1.0f));
-			camera.update(player.position + camera_position, player.view_rotation);
+			camera.update(player_ent.position + camera_position, player.view_rotation);
 		} else {
-			glm::vec3 camera_position = player.position + player.eye_offset;
+			glm::vec3 camera_position = player_ent.position + player.eye_offset;
 			camera.update(camera_position, player.view_rotation);
 		}
 	}
@@ -216,17 +204,22 @@ struct Scene {
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale,
-			glm::vec3 eye_offset,
 			float mass,
+			glm::vec3 eye_offset,
 			const ModelID projectile_model_id) {
-		playable_entities.emplace_back(
+		/* DynamicEntity* dynamic_ent = */ addDynamicEntity(
 				mesh_id,
 				material_id,
 				position,
 				rotation,
 				scale,
-				mass,
+				mass);
+
+		playable_entities.emplace_back(
+				dynamic_entities.size() - 1,
+				this,
 				eye_offset,
+				rotation,
 				projectile_model_id);
 		
 		return &(playable_entities.back());
@@ -241,12 +234,6 @@ struct Scene {
 
 		if (entity_index < dynamic_entities.size()) {
 			return static_cast<const Entity*>(&(dynamic_entities[entity_index]));
-		}
-
-		entity_index -= dynamic_entities.size();
-
-		if (entity_index < playable_entities.size()) {
-			return static_cast<const Entity*>(&(playable_entities[entity_index]));
 		}
 
 		return nullptr;
