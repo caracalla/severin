@@ -40,7 +40,7 @@ void PlayableEntity::applyForceOnBox(Scene* scene) {
 }
 
 void PlayableEntity::resetPointer() {
-  pointer_ent->position = position + eye_position;
+  pointer_ent->position = position + eye_offset;
 }
 
 

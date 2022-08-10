@@ -1,10 +1,13 @@
 # shared fighter info
-# height   width   eye height
-i 1.7      0.5    1.5
+# height   width   eye y offset
+i 1.7      0.5     0.75
 
 # list of fighters
+#   (player position (and that of all entities) is its "center", so in the case
+#   of a 1.7 unit tall player with bottom at <0, 0, 0>, its position is
+#   actually <0, 0.85, 0>)
 # position       rotation
-f 0.0 0.0 0.0    0.0 0.785 0.0
+f 0.0 2.0 0.0    0.0 0.785 0.0
 
 # platforms   # start position    #end position      # color
 # enclosing box

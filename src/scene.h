@@ -43,7 +43,7 @@ struct Scene;
 
 
 struct PlayableEntity : public DynamicEntity {
-	glm::vec3 eye_position; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
+	glm::vec3 eye_offset; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
 	glm::vec3 view_rotation;
 	ModelID projectile_model_id;
 	float cooldown_remaining = 0.0f;
@@ -61,10 +61,10 @@ struct PlayableEntity : public DynamicEntity {
 			glm::vec3 rotation,
 			float scale,
 			float mass,
-			glm::vec3 eye_position,
+			glm::vec3 eye_offset,
 			ModelID projectile_model_id) :
 					DynamicEntity(mesh_id, material_id, position, rotation, scale, mass),
-					eye_position(eye_position),
+					eye_offset(eye_offset),
 					view_rotation(rotation),
 					projectile_model_id(projectile_model_id) {}
 
@@ -121,9 +121,6 @@ struct Scene {
 
 			entity.is_on_ground = false;
 
-			// player specific crap, should remove
-			entity.position.y += entity.collision.shape.sphere.radius;
-
 			for (auto static_ent : static_entities) {
 				// may set entity.is_on_ground back to true
 				entity.position = entity.collideWith(static_ent, entity.position);
@@ -132,7 +129,6 @@ struct Scene {
 			// update collision
 			Sphere& sphere = entity.collision.shape.sphere;
 			sphere.center_start = entity.position;
-			entity.position.y -= sphere.radius; // player specific crap, should remove
 		}
 
 		for (auto& entity : dynamic_entities) {
@@ -186,7 +182,7 @@ struct Scene {
 			camera_position = glm::vec3(rotation * glm::vec4(camera_position, 1.0f));
 			camera.update(player.position + camera_position, player.view_rotation);
 		} else {
-			glm::vec3 camera_position = player.position + player.eye_position;
+			glm::vec3 camera_position = player.position + player.eye_offset;
 			camera.update(camera_position, player.view_rotation);
 		}
 	}
@@ -220,7 +216,7 @@ struct Scene {
 			glm::vec3 position,
 			glm::vec3 rotation,
 			float scale,
-			glm::vec3 eye_position,
+			glm::vec3 eye_offset,
 			float mass,
 			const ModelID projectile_model_id) {
 		playable_entities.emplace_back(
@@ -230,7 +226,7 @@ struct Scene {
 				rotation,
 				scale,
 				mass,
-				eye_position,
+				eye_offset,
 				projectile_model_id);
 		
 		return &(playable_entities.back());

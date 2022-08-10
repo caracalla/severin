@@ -65,10 +65,10 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	for (const auto& fighter : level.fighters) {
 		ModelID model_id = _renderer->uploadModel(fighter.model);
 
-		glm::vec3 fighter_eye_position = // temporary
+		glm::vec3 fighter_eye_offset = // temporary
 				glm::vec3(
 						0.0f,
-						fighter.dimensions.eye_height,
+						fighter.dimensions.eye_y_offset,
 						0.0f);
 
 		PlayableEntity* ent = _scene->addPlayableEntity(
@@ -77,7 +77,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 				fighter.position,
 				fighter.rotation,
 				1.0f, // scale
-				fighter_eye_position,
+				fighter_eye_offset,
 				fighter_mass,
 				projectile_model_id);
 		float radius = fighter.dimensions.height / 2;
@@ -121,7 +121,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	glm::vec3 icosa_color{1.0f, 0.0f, 0.0f};
 	Model icosa_model = Model::createIcosahedron(icosa_color);
 	icosa_model = subdivide(icosa_model, icosa_color);
-	glm::vec3 icosa_pos = player.position + player.eye_position;
+	glm::vec3 icosa_pos = player.position + player.eye_offset;
 	ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
 	Entity* ball_ent = _scene->addStaticEntity(
 				icosa_model_id,

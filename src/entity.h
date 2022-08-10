@@ -15,6 +15,7 @@
 struct Entity { // 64 bytes total
 	ModelID mesh_id; // identifier for geometry
 	uint16_t material_id; // identifier for shading
+	// for now, position is basically the circumcenter of the object
 	glm::vec3 position; // 12 bytes
 	glm::vec3 rotation; // 12 bytes
 	float scale = 1.0f; // 4 bytes

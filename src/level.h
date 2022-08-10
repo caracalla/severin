@@ -33,7 +33,7 @@ struct Level {
 		struct Dimensions {
 			float height;
 			float width;
-			float eye_height;
+			float eye_y_offset;
 		};
 
     glm::vec3 position;
@@ -49,20 +49,11 @@ struct Level {
 			glm::vec3 color(0.0f, 0.0f, 1.0f);
 
 			model = Model::createHexahedron(dims.width, dims.height, dims.width, color);
-
-			// stupid hack to put the origin of the model at the bottom
-			for (auto& vertex : model.vertices) {
-				vertex.position.y += dimensions.height / 2;
-			}
 		}
   };
 
   std::vector<Platform> platforms;
   std::vector<Fighter> fighters;
-	float fighter_height;
-	float fighter_width;
-	float fighter_eye_height;
-	Model fighter_model;
 	
 	bool is_valid = false;
 
@@ -93,7 +84,7 @@ struct Level {
 
 			if (first_char == 'i') {
 				// shared fighter dimensions
-				if (!(line_stream >> fighter_dims.height >> fighter_dims.width >> fighter_dims.eye_height)) {
+				if (!(line_stream >> fighter_dims.height >> fighter_dims.width >> fighter_dims.eye_y_offset)) {
 					logLevelLoadError("fighter shared info improperly formatted!", line);
 					return level;
 				}
