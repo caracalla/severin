@@ -2,7 +2,12 @@
 
 
 DynamicEntity& PlayableEntity::getEntity() {
-  return scene->dynamic_entities[dynamic_ent_id];
+  return scene->getDynamicEntity(dynamic_ent_id);
+}
+
+
+Entity& PlayableEntity::getPointerEntity() {
+  return scene->getStaticEntity(pointer_ent_id);
 }
 
 
@@ -34,19 +39,20 @@ void PlayableEntity::applyForceOnBox() {
   Entity& spinny_box = scene->static_entities[0];
 
   resetPointer();
-  Ray ray{pointer_ent->position, viewDirection()};
+  Entity& pointer_ent = getPointerEntity();
+  Ray ray{pointer_ent.position, viewDirection()};
 
   glm::vec3 point;
   float t_min;
 
   if (rayAABB(ray, spinny_box.collision.shape.box, t_min, point)) {
-    pointer_ent->position = point;
-    pointer_ent->scale = 0.05f;
+    pointer_ent.position = point;
+    pointer_ent.scale = 0.05f;
   }
 }
 
 void PlayableEntity::resetPointer() {
-  pointer_ent->position = getEntity().position + eye_offset;
+  getPointerEntity().position = getEntity().position + eye_offset;
 }
 
 

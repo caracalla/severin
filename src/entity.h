@@ -11,6 +11,8 @@
 #include <algorithm>
 
 
+using StaticEntityID = uint16_t;
+
 // the in-world representation of any object
 struct Entity { // 64 bytes total
 	ModelID mesh_id; // identifier for geometry
@@ -35,7 +37,7 @@ struct Entity { // 64 bytes total
 };
 
 
-using DynamicEntityId = uint16_t;
+using DynamicEntityID = uint16_t;
 
 struct DynamicEntity : public Entity {
 	glm::vec3 velocity{0.0f};

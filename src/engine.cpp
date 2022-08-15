@@ -20,13 +20,16 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	uint16_t default_material_id = 0; // placeholder
 
+	// **************************************************************************
+	// set up static objects
+	// **************************************************************************
 	// add the spinny box
 	{
 		glm::vec3 pos{5.0f, 1.5f, -5.0f};
 		float size = 2.0f;
 		glm::vec3 dims{size, size, size};
 		Model model = Model::createHexahedron(dims.x, dims.y, dims.z);
-		ModelID model_id = _renderer->uploadModel(model);
+		ModelID model_id = uploadModel(model);
 
 		Entity* ent = _scene->addStaticEntity(
 				model_id,
@@ -40,7 +43,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	}
 
 	for (const auto& platform : level.platforms) {
-		ModelID model_id = _renderer->uploadModel(platform.model);
+		ModelID model_id = uploadModel(platform.model);
 
 		Entity* ent = _scene->addStaticEntity(
 				model_id,
@@ -53,6 +56,9 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 		ent->collision.shape.box.max_pos = platform.end_pos;
 	}
 
+	// **************************************************************************
+	// set up player(s)
+	// **************************************************************************
 	// just default to the first fighter as the player for now
 	int player_fighter_num = 0;
 	float fighter_mass = 72.0f;
@@ -60,10 +66,10 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	// set up projectile model
 	Model projectile_model = Model::createIcosahedron();
 	projectile_model = subdivide(projectile_model);
-	ModelID projectile_model_id = _renderer->uploadModel(projectile_model);
+	ModelID projectile_model_id = uploadModel(projectile_model);
 
 	for (const auto& fighter : level.fighters) {
-		ModelID model_id = _renderer->uploadModel(fighter.model);
+		ModelID model_id = uploadModel(fighter.model);
 
 		glm::vec3 fighter_eye_offset = // temporary
 				glm::vec3(
@@ -88,10 +94,13 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	_scene->player_entity_index = player_fighter_num;
 
+	// **************************************************************************
+	// set up misc stuff
+	// **************************************************************************
 	// // add building model
 	// Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
 	// glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
-	// ModelID model_id = _renderer->uploadModel(model);
+	// ModelID model_id = uploadModel(model);
 	// _scene->addStaticEntity(
 	// 			model_id,
 	// 			default_material_id,
@@ -103,7 +112,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	// Model icosa_model = Model::createIcosahedron();
 	// icosa_model = subdivide(icosa_model);
 	// glm::vec3 icosa_pos{0.0, 2.0, -5.0};
-	// ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
+	// ModelID icosa_model_id = uploadModel(icosa_model);
 	// Entity* ball_ent = _scene->addStaticEntity(
 	// 			icosa_model_id,
 	// 			default_material_id,
@@ -123,14 +132,14 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 	Model icosa_model = Model::createIcosahedron(icosa_color);
 	icosa_model = subdivide(icosa_model, icosa_color);
 	glm::vec3 icosa_pos = player.getEntity().position + player.eye_offset;
-	ModelID icosa_model_id = _renderer->uploadModel(icosa_model);
+	ModelID icosa_model_id = uploadModel(icosa_model);
 	Entity* ball_ent = _scene->addStaticEntity(
 				icosa_model_id,
 				default_material_id,
 				icosa_pos,
 				glm::vec3(0.0f), // rotation
 				0.01f); // scale
-	player.pointer_ent = ball_ent;
+	player.pointer_ent_id = _scene->static_entities.size() - 1;
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 

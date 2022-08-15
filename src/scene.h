@@ -44,13 +44,13 @@ struct Scene;
 
 
 struct PlayableEntity {
-	DynamicEntityId dynamic_ent_id;
+	DynamicEntityID dynamic_ent_id;
 	Scene* scene; // ugh I don't like doing this yet again
 	glm::vec3 eye_offset; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
 	glm::vec3 view_rotation;
 	ModelID projectile_model_id;
 	float cooldown_remaining = 0.0f;
-	Entity* pointer_ent = nullptr;
+	StaticEntityID pointer_ent_id;
 
 	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
 	static constexpr float kSprintFactor = 3.0f;
@@ -58,7 +58,7 @@ struct PlayableEntity {
 	static constexpr float kWeaponCooldownSec = 0.2f;
 
 	PlayableEntity(
-			DynamicEntityId dynamic_ent_id,
+			DynamicEntityID dynamic_ent_id,
 			Scene* scene,
 			glm::vec3 eye_offset,
 			glm::vec3 view_rotation,
@@ -70,6 +70,7 @@ struct PlayableEntity {
 					projectile_model_id(projectile_model_id) {}
 
 	DynamicEntity& getEntity();
+	Entity& getPointerEntity();
 
 	void moveFromInputs(
     const float dt_sec,
@@ -223,6 +224,14 @@ struct Scene {
 				projectile_model_id);
 		
 		return &(playable_entities.back());
+	}
+
+	Entity& getStaticEntity(StaticEntityID id) {
+		return static_entities[id];
+	}
+
+	DynamicEntity& getDynamicEntity(DynamicEntityID id) {
+		return dynamic_entities[id];
 	}
 
 	const Entity* getNextEntity(int entity_index) const {

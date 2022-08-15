@@ -18,6 +18,10 @@ struct Engine {
 			_scene(scene),
 			_renderer(renderer) {};
 
+	const ModelID uploadModel(Model model) const {
+		return _renderer->uploadModel(model);
+	}
+
 	const bool loadLevelFile(const std::string& filename) const;
 
 	bool isRunning() {
