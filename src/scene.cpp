@@ -36,7 +36,7 @@ void PlayableEntity::shootBall(const float dt_sec) {
 
 
 void PlayableEntity::applyForceOnBox() {
-  Entity& spinny_box = scene->static_entities[0];
+  Entity& spinny_box = scene->getStaticEntity(0);
 
   resetPointer();
   Entity& pointer_ent = getPointerEntity();
@@ -117,7 +117,7 @@ void PlayableEntity::moveFromInputs(
       // no input, but moving faster than delta_speed -> accel in direction opposite current_direction
       accel_direction = glm::normalize(current_direction) * -1.0f;
 
-      if (!ent.is_on_ground) {
+      if (!ent.isOnGround()) {
         scalar_accel = 0;
       }
     } else {
@@ -154,10 +154,9 @@ void PlayableEntity::moveFromInputs(
   }
 
   // jump stuff
-  if (button_states.jump && ent.is_on_ground) {
+  if (button_states.jump && ent.isOnGround()) {
     constexpr float jump_speed = 0.8f;
     ent.velocity.y += 8.0f;
-    ent.is_on_ground = false;
     util::log("jumping!");
   }
 
@@ -169,6 +168,6 @@ void PlayableEntity::moveFromInputs(
     // shootBall(dt_sec);
     applyForceOnBox();
   } else {
-    // resetPointer();
+    resetPointer();
   }
 }

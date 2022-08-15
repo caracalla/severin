@@ -40,13 +40,13 @@ struct Entity { // 64 bytes total
 using DynamicEntityID = uint16_t;
 
 struct DynamicEntity : public Entity {
+	glm::vec3 collisions{0.0f};
 	glm::vec3 velocity{0.0f};
 	glm::vec3 force{0.0f};
 	// glm::vec3 angular_velocity{0.0f};
 	// glm::vec3 torque{0.0f};
 	float mass;
 	float springiness = 0.0f;
-	bool is_on_ground = true;
 
 	DynamicEntity(
 			ModelID mesh_id,
@@ -63,6 +63,15 @@ struct DynamicEntity : public Entity {
 
 		glm::vec3 sphere_pos = position + glm::vec3(0.0f, radius, 0.0f);
 		collision.shape.sphere.center_start = sphere_pos;
+	}
+
+	const glm::vec3 collisionDirection() const {
+		return util::isVectorZero(collisions) ? collisions : glm::normalize(collisions);
+	}
+
+	// used only for player jumping physics right now
+	const bool isOnGround() const {
+		return collisionDirection().y > 0.5f;
 	}
 
 	void applyForce(const glm::vec3 new_force) {
@@ -121,15 +130,13 @@ struct DynamicEntity : public Entity {
 				collision_direction = glm::normalize(collision_direction);
 				new_position = collision_point + (collision_direction * sphere.radius);
 
-				if (collision_direction.y > 0.5f) {
-					is_on_ground = true;
-				}
-
 				// project current velocity along collision direction, and negate the
 				// orthogonal component to provide "bounce back"
 				glm::vec3 parallel = glm::dot(collision_direction, velocity) * collision_direction;
 				glm::vec3 orthogonal = velocity - parallel;
 				velocity = orthogonal - parallel * springiness;
+
+				collisions += collision_direction;
 			}
 		} else if (other_ent_type == Collision::Type::sphere) {
 			const Sphere& other_sphere = other_entity.collision.shape.sphere;
@@ -161,6 +168,8 @@ struct DynamicEntity : public Entity {
 				glm::vec3 parallel = glm::dot(collision_direction, velocity) * collision_direction;
 				glm::vec3 orthogonal = velocity - parallel;
 				velocity = orthogonal - parallel * springiness;
+
+				collisions += collision_direction;
 			}
 		}
 

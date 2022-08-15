@@ -42,7 +42,6 @@ struct Camera {
 struct Scene;
 
 
-
 struct PlayableEntity {
 	DynamicEntityID dynamic_ent_id;
 	Scene* scene; // ugh I don't like doing this yet again
@@ -51,6 +50,9 @@ struct PlayableEntity {
 	ModelID projectile_model_id;
 	float cooldown_remaining = 0.0f;
 	StaticEntityID pointer_ent_id;
+
+	static constexpr int kNumCollisionDirEnts = 5;
+	StaticEntityID collision_dir_ent_ids[kNumCollisionDirEnts];
 
 	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
 	static constexpr float kSprintFactor = 3.0f;
@@ -119,16 +121,21 @@ struct Scene {
 		constexpr glm::vec3 gravity_acceleration{0.0f, -9.8f, 0.0f};
 
 		for (auto& entity : dynamic_entities) {
+			// reset collisions
+			entity.collisions = glm::vec3(0.0f);
+
 			entity.applyAcceleration(gravity_acceleration);
 			entity.move(dt_sec);
 
-			entity.is_on_ground = false;
 			for (auto static_ent : static_entities) {
-				// may set entity.is_on_ground back to true
 				entity.position = entity.collideWith(static_ent, entity.position);
 			}
 
 			// update collision
+			// we're going to want to do this later
+			// represent all dynamic entities as stretched (what's the right word here??)
+			// spheres (the path of movement), then collide with each the environment,
+			// then each other
 			Sphere& sphere = entity.collision.shape.sphere;
 			sphere.center_start = entity.position;
 		}
@@ -155,6 +162,14 @@ struct Scene {
 			// warp to a high-ish point if you go far enough down
 			player_ent.position.y = 10;
 			player_ent.velocity.y = 0.0f; // -420.0f;
+		}
+
+		// do post-step actions
+		glm::vec3 start_pos = player_ent.position;
+		glm::vec3 increment = player_ent.collisions * (2.0f / PlayableEntity::kNumCollisionDirEnts);
+		for (int i = 0; i < PlayableEntity::kNumCollisionDirEnts; i++) {
+			Entity& col_dir_ent = getStaticEntity(player.collision_dir_ent_ids[i]);
+			col_dir_ent.position = start_pos + (increment * static_cast<float>(i));
 		}
 
 		static bool third_person_cam = false;

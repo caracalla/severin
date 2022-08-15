@@ -128,20 +128,38 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	util::log("adding the thing");
 	// add pointer model
-	glm::vec3 icosa_color{1.0f, 0.0f, 0.0f};
-	Model icosa_model = Model::createIcosahedron(icosa_color);
-	icosa_model = subdivide(icosa_model, icosa_color);
-	glm::vec3 icosa_pos = player.getEntity().position + player.eye_offset;
-	ModelID icosa_model_id = uploadModel(icosa_model);
-	Entity* ball_ent = _scene->addStaticEntity(
-				icosa_model_id,
+	glm::vec3 player_force_pointer_color{1.0f, 0.0f, 0.0f};
+	Model player_force_pointer_model = Model::createIcosahedron(player_force_pointer_color);
+	player_force_pointer_model = subdivide(player_force_pointer_model, player_force_pointer_color);
+	glm::vec3 player_force_pointer_pos = player.getEntity().position + player.eye_offset;
+	ModelID player_force_pointer_model_id = uploadModel(player_force_pointer_model);
+	Entity* player_force_pointer_ent = _scene->addStaticEntity(
+				player_force_pointer_model_id,
 				default_material_id,
-				icosa_pos,
+				player_force_pointer_pos,
 				glm::vec3(0.0f), // rotation
 				0.01f); // scale
 	player.pointer_ent_id = _scene->static_entities.size() - 1;
 
 	util::log("successfully loaded level %s", level_filename.c_str());
+
+	// set up collision direction displayer
+	{
+		glm::vec3 col_dir_color{1.0f, 0.0f, 1.0f};
+		StaticEntityID first_ent_id = _scene->static_entities.size();
+		for (int i = 0; i < PlayableEntity::kNumCollisionDirEnts; i++) {
+			Model col_dir_model = Model::createIcosahedron(col_dir_color);
+			col_dir_model = subdivide(col_dir_model, col_dir_color);
+			ModelID col_dir_model_id = uploadModel(col_dir_model);
+			Entity* col_dir_ent = _scene->addStaticEntity(
+						col_dir_model_id,
+						default_material_id,
+						glm::vec3(0.0f), // position
+						glm::vec3(0.0f), // rotation
+						0.05f); // scale
+			player.collision_dir_ent_ids[i] = first_ent_id + i;
+		}
+	}
 
 	return true;
 }
