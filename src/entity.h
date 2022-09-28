@@ -38,9 +38,11 @@ struct Entity { // 64 bytes total
 
 
 using DynamicEntityID = uint16_t;
+struct DynamicEntity;
+using EntityAction = std::function<void(DynamicEntity* self, const float dt_sec)>;
 
 struct DynamicEntity : public Entity {
-	glm::vec3 collisions{0.0f};
+	glm::vec3 collisions{0.0f}; // a sum of the direction of collision with each entity
 	glm::vec3 velocity{0.0f};
 	glm::vec3 force{0.0f};
 	// glm::vec3 angular_velocity{0.0f};
@@ -48,6 +50,11 @@ struct DynamicEntity : public Entity {
 	float mass;
 	float springiness = 0.0f;
 
+	// actions
+	bool has_post_action = false;
+	EntityAction post_action;
+
+	// init functions
 	DynamicEntity(
 			ModelID mesh_id,
 			uint16_t material_id,
@@ -57,6 +64,7 @@ struct DynamicEntity : public Entity {
 			float mass) : Entity(mesh_id, material_id, position, rotation, scale), mass(mass) {}
 
 	void initCollision(const float radius) {
+		// always a sphere for now
 		collision.type = Collision::Type::sphere;
 
 		collision.shape.sphere.radius = radius;
@@ -65,15 +73,12 @@ struct DynamicEntity : public Entity {
 		collision.shape.sphere.center_start = sphere_pos;
 	}
 
-	const glm::vec3 collisionDirection() const {
-		return util::isVectorZero(collisions) ? collisions : glm::normalize(collisions);
+	void setPostAction(EntityAction action) {
+		has_post_action = true;
+		post_action = action;
 	}
 
-	// used only for player jumping physics right now
-	const bool isOnGround() const {
-		return collisionDirection().y > 0.5f;
-	}
-
+	// mid-action functions
 	void applyForce(const glm::vec3 new_force) {
 		force += new_force;
 	}
@@ -174,5 +179,19 @@ struct DynamicEntity : public Entity {
 		}
 
 		return new_position;
+	}
+
+	// post-action functions (only call after physics and collisions have taken place)
+	const bool didCollide() const {
+		return !util::isVectorZero(collisions);
+	}
+
+	const glm::vec3 collisionDirection() const {
+		return util::safeNormalize(collisions);
+	}
+
+	// used only for player jumping physics right now
+	const bool isOnGround() const {
+		return collisionDirection().y > 0.5f;
 	}
 };

@@ -11,6 +11,12 @@ Entity& PlayableEntity::getPointerEntity() {
 }
 
 
+const glm::vec3 PlayableEntity::eyePosition() const {
+  DynamicEntity& player_ent = scene->getDynamicEntity(dynamic_ent_id);
+  return player_ent.position + eye_offset;
+}
+
+
 void PlayableEntity::shootBall(const float dt_sec) {
   if (cooldown_remaining > 0.0f) {
 		cooldown_remaining -= dt_sec;
@@ -19,14 +25,12 @@ void PlayableEntity::shootBall(const float dt_sec) {
 
   cooldown_remaining = kWeaponCooldownSec / 2;
 
-  DynamicEntity& ent = getEntity();
-  glm::vec3 projectile_pos = ent.position;
-  projectile_pos.y += 1.0;
+  DynamicEntity& player_ent = getEntity();
   DynamicEntity* projectile = scene->addDynamicEntity(
       projectile_model_id,
       0,
-      projectile_pos,
-      ent.rotation,
+      player_ent.position,
+      player_ent.rotation,
       0.2f,
       0.0f);
   projectile->initCollision(0.12f);
@@ -35,11 +39,18 @@ void PlayableEntity::shootBall(const float dt_sec) {
 }
 
 
-void PlayableEntity::applyForceOnBox() {
+void PlayableEntity::applyForceOnBox(bool is_active) {
+  // reset the pointer
+  Entity& pointer_ent = getPointerEntity();
+  pointer_ent.position = eyePosition();
+
+  if (!is_active) {
+    return;
+  }
+
+  // someday we'll make this box spin
   Entity& spinny_box = scene->getStaticEntity(0);
 
-  resetPointer();
-  Entity& pointer_ent = getPointerEntity();
   Ray ray{pointer_ent.position, viewDirection()};
 
   glm::vec3 point;
@@ -51,8 +62,45 @@ void PlayableEntity::applyForceOnBox() {
   }
 }
 
-void PlayableEntity::resetPointer() {
-  getPointerEntity().position = getEntity().position + eye_offset;
+
+constexpr glm::vec3 beam_neutral_direction{0.0f, 0.0f, -1.0f};
+
+void PlayableEntity::shootBeam(const float dt_sec) {
+  if (cooldown_remaining > 0.0f) {
+		cooldown_remaining -= dt_sec;
+    return;
+  }
+
+  cooldown_remaining = kWeaponCooldownSec / 1.0f;
+
+	glm::vec3 rotation = view_rotation * -1.0f;
+	rotation.y = 0.0f;
+	rotation.z = 0.0f;
+
+	// need to get rotation between two vectors:
+	// * the default direction of the projectile <0, 0, 1>
+	// * the desired direction (initially viewDirection, later velocity)
+
+  DynamicEntity& player_ent = getEntity();
+  DynamicEntity* beam = scene->addDynamicEntity(
+      beam_model_id,
+      0,
+      eyePosition(), // player_ent.position,
+      util::rotationBetweenTwoVectors(
+					beam_neutral_direction,
+					util::safeNormalize(viewDirection())),
+      0.2f,
+      0.0f);
+  beam->initCollision(0.12f);
+  beam->springiness = 1.0f;
+  beam->velocity = viewDirection() * 20.0f;
+
+  beam->setPostAction([](DynamicEntity* self, const float dt_sec) {
+    if (self->didCollide()) {
+			glm::vec3 new_direction = util::safeNormalize(self->velocity);
+			self->rotation = util::rotationBetweenTwoVectors(beam_neutral_direction, new_direction);
+    }
+  });
 }
 
 
@@ -115,7 +163,7 @@ void PlayableEntity::moveFromInputs(
 
     if (!movement_input_detected) {
       // no input, but moving faster than delta_speed -> accel in direction opposite current_direction
-      accel_direction = glm::normalize(current_direction) * -1.0f;
+      accel_direction = current_direction * -1.0f;
 
       if (!ent.isOnGround()) {
         scalar_accel = 0;
@@ -163,11 +211,11 @@ void PlayableEntity::moveFromInputs(
   // player model should only rotate about the y axis
   ent.rotation.y = -view_rotation.y;
 
-  // shooting stuff
+  // action stuff
   if (button_states.action) {
     // shootBall(dt_sec);
-    applyForceOnBox();
-  } else {
-    resetPointer();
+    shootBeam(dt_sec);
   }
+
+  applyForceOnBox(button_states.action);
 }

@@ -24,8 +24,13 @@ bin/severin
 * make a MaterialID alias for uint16_t
 * un-inherit entities from each other
 * make EntityManager
-* make the position for any entity its circumcenter (is that wise?  apparently not?  look up what dan said)
 * avoid copying Model objects (unique pointers?)
 * collisions - can still pass through walls if going fast enough
   * ray test
 * make player class?
+* formalize the concept of weapons
+  * each player can have 2
+  * how to store?
+  * how to denote behavior? (lambda, like in buffdog?)
+  * how/when to run behavior?
+* rotational physics

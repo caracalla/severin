@@ -178,7 +178,7 @@ Model subdivide(Model original, glm::vec3 color) {
 	// than aligned to the triangle
 	for (int i = 0; i < original.vertices.size(); i++) {
 		Vertex& vert = original.vertices[i];
-		vert.normal = glm::normalize(vert.position);
+		vert.normal = util::safeNormalize(vert.position);
 	}
 
 	return new_model;

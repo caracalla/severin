@@ -1,6 +1,6 @@
 # shared fighter info
 # height   width   eye y offset
-i 1.7      0.5     0.75
+i 1.7      0.5     0.65   # 1.7m tall, eyes 1.5m from the ground
 
 # list of fighters
 #   (player position (and that of all entities) is its "center", so in the case

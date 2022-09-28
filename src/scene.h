@@ -48,11 +48,9 @@ struct PlayableEntity {
 	glm::vec3 eye_offset; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
 	glm::vec3 view_rotation;
 	ModelID projectile_model_id;
+	ModelID beam_model_id;
 	float cooldown_remaining = 0.0f;
 	StaticEntityID pointer_ent_id;
-
-	static constexpr int kNumCollisionDirEnts = 5;
-	StaticEntityID collision_dir_ent_ids[kNumCollisionDirEnts];
 
 	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
 	static constexpr float kSprintFactor = 3.0f;
@@ -74,14 +72,17 @@ struct PlayableEntity {
 	DynamicEntity& getEntity();
 	Entity& getPointerEntity();
 
+	const glm::vec3 eyePosition() const;
+
 	void moveFromInputs(
     const float dt_sec,
     const Input::ButtonStates button_states,
     const Input::MouseState mouse_state);
 
-	void shootBall(const float dt_sec);
-	void applyForceOnBox();
-	void resetPointer();
+	// placeholder actions
+	void shootBall(const float dt_sec); // shoots a colliding ball
+	void applyForceOnBox(bool is_active); // should make a box spin, someday
+	void shootBeam(const float dt_sec); // like the ball, but it's a beam
 
 	const glm::vec3 viewDirection() const {
 		constexpr glm::vec4 kDefaultView{0.0, 0.0, -1.0f, 0.0f};
@@ -165,11 +166,10 @@ struct Scene {
 		}
 
 		// do post-step actions
-		glm::vec3 start_pos = player_ent.position;
-		glm::vec3 increment = player_ent.collisions * (2.0f / PlayableEntity::kNumCollisionDirEnts);
-		for (int i = 0; i < PlayableEntity::kNumCollisionDirEnts; i++) {
-			Entity& col_dir_ent = getStaticEntity(player.collision_dir_ent_ids[i]);
-			col_dir_ent.position = start_pos + (increment * static_cast<float>(i));
+		for (DynamicEntity& ent : dynamic_entities) {
+			if (ent.has_post_action) {
+				ent.post_action(&ent, dt_sec);
+			}
 		}
 
 		static bool third_person_cam = false;
@@ -186,7 +186,7 @@ struct Scene {
 			camera_position = glm::vec3(rotation * glm::vec4(camera_position, 1.0f));
 			camera.update(player_ent.position + camera_position, player.view_rotation);
 		} else {
-			glm::vec3 camera_position = player_ent.position + player.eye_offset;
+			glm::vec3 camera_position = player.eyePosition();
 			camera.update(camera_position, player.view_rotation);
 		}
 	}

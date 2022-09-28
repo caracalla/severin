@@ -126,7 +126,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	PlayableEntity& player = _scene->getPlayer();
 
-	util::log("adding the thing");
+	util::log("adding the pointer, which indicates where force is being applied");
 	// add pointer model
 	glm::vec3 player_force_pointer_color{1.0f, 0.0f, 0.0f};
 	Model player_force_pointer_model = Model::createIcosahedron(player_force_pointer_color);
@@ -143,7 +143,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 
-	// set up collision direction displayer
+	// set up collision direction displayer (should this be for all dynamic entities?)
 	{
 		glm::vec3 col_dir_color{1.0f, 0.0f, 1.0f};
 		StaticEntityID first_ent_id = _scene->static_entities.size();
@@ -159,6 +159,18 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 						0.05f); // scale
 			player.collision_dir_ent_ids[i] = first_ent_id + i;
 		}
+	}
+
+	// set up the beam for the player beam gun
+	{
+		glm::vec3 beam_dims{0.5f, 0.5f, 5.0f};
+		Model beam_model = Model::createHexahedron(
+				beam_dims.x,
+				beam_dims.y,
+				beam_dims.z,
+				glm::vec3(0.0f, 1.0f, 0.0f));
+		ModelID beam_model_id = uploadModel(beam_model);
+		player.beam_model_id = beam_model_id;
 	}
 
 	return true;
