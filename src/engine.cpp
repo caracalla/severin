@@ -143,24 +143,6 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	util::log("successfully loaded level %s", level_filename.c_str());
 
-	// set up collision direction displayer (should this be for all dynamic entities?)
-	{
-		glm::vec3 col_dir_color{1.0f, 0.0f, 1.0f};
-		StaticEntityID first_ent_id = _scene->static_entities.size();
-		for (int i = 0; i < PlayableEntity::kNumCollisionDirEnts; i++) {
-			Model col_dir_model = Model::createIcosahedron(col_dir_color);
-			col_dir_model = subdivide(col_dir_model, col_dir_color);
-			ModelID col_dir_model_id = uploadModel(col_dir_model);
-			Entity* col_dir_ent = _scene->addStaticEntity(
-						col_dir_model_id,
-						default_material_id,
-						glm::vec3(0.0f), // position
-						glm::vec3(0.0f), // rotation
-						0.05f); // scale
-			player.collision_dir_ent_ids[i] = first_ent_id + i;
-		}
-	}
-
 	// set up the beam for the player beam gun
 	{
 		glm::vec3 beam_dims{0.5f, 0.5f, 5.0f};
