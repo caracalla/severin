@@ -13,6 +13,9 @@ struct Engine {
 	Scene* _scene;
 	Renderer* _renderer;
 
+	// placeholder
+	uint16_t _default_material_id = 0;
+
 	Engine(WindowHandler* window_handler, Scene* scene, Renderer* renderer) :
 			_window_handler(window_handler),
 			_scene(scene),
@@ -21,6 +24,8 @@ struct Engine {
 	const ModelID uploadModel(Model model) const {
 		return _renderer->uploadModel(model);
 	}
+
+	void setUpExperimentalGarbage() const;
 
 	const bool loadLevelFile(const std::string& filename) const;
 

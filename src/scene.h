@@ -55,7 +55,7 @@ struct PlayableEntity {
 	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
 	static constexpr float kSprintFactor = 3.0f;
 	static constexpr float kAccelerationFactor = 10.0f;
-	static constexpr float kWeaponCooldownSec = 0.2f;
+	static constexpr float kWeaponCooldownSec = 0.1f;
 
 	PlayableEntity(
 			DynamicEntityID dynamic_ent_id,

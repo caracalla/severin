@@ -36,6 +36,8 @@ std::chrono::microseconds max_frame_duration = std::chrono::microseconds(0);
 
 bool should_log = true;
 
+// now that we're forcing 60 fps in Engine::run(), the extra frame stats no longer make
+// sense (e.g. avg duration is always ~16000us)
 #define LOG_EXTRA_FRAME_STATS 0
 
 void updateFrameStats(std::chrono::microseconds last_frame_duration) {
@@ -64,7 +66,7 @@ void util::logFrameStats(std::chrono::microseconds last_frame_duration) {
 		double average_frame_time = time_since_last_second.count() / frame_count;
 
 		log(
-				"FPS: %d, avg duration: %.0f ms, min duration: %d, max duration: %d",
+				"FPS: %d, avg duration: %.0f us, min duration: %d, max duration: %d",
 				frame_count,
 				average_frame_time,
 				min_frame_duration.count(),

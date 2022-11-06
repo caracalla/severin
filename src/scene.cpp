@@ -205,7 +205,7 @@ void PlayableEntity::moveFromInputs(
   if (button_states.jump && ent.isOnGround()) {
     constexpr float jump_speed = 0.8f;
     ent.velocity.y += 8.0f;
-    util::log("jumping!");
+    // util::log("jumping!");
   }
 
   // player model should only rotate about the y axis

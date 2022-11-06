@@ -9,20 +9,7 @@
 #include <thread>
 
 
-const bool Engine::loadLevelFile(const std::string& level_filename) const {
-	std::ifstream level_file(level_filename);
-	Level level = Level::loadFromFile(level_filename);
-
-	if (!level.is_valid) {
-		util::logError("level %s is not valid", level_filename.c_str());
-		return false;
-	}
-
-	uint16_t default_material_id = 0; // placeholder
-
-	// **************************************************************************
-	// set up static objects
-	// **************************************************************************
+void Engine::setUpExperimentalGarbage() const {
 	// add the spinny box
 	{
 		glm::vec3 pos{5.0f, 1.5f, -5.0f};
@@ -33,7 +20,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 		Entity* ent = _scene->addStaticEntity(
 				model_id,
-				default_material_id,
+				_default_material_id,
 				pos,
 				glm::vec3(0.0f), // rotation
 				1.0f); // scale
@@ -42,12 +29,85 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 		ent->collision.shape.box.max_pos = pos + dims / 2.0f;
 	}
 
+
+	// **************************************************************************
+	// set up misc stuff
+	// **************************************************************************
+	// // add building model
+	// Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
+	// glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
+	// ModelID model_id = uploadModel(model);
+	// _scene->addStaticEntity(
+	// 			model_id,
+	// 			_default_material_id,
+	// 			building_pos,
+	// 			glm::vec3(0.0f), // rotation
+	// 			1.0f); // scale
+
+	// // add icosahedron model
+	// Model icosa_model = Model::createIcosahedron();
+	// icosa_model = subdivide(icosa_model);
+	// glm::vec3 icosa_pos{0.0, 2.0, -5.0};
+	// ModelID icosa_model_id = uploadModel(icosa_model);
+	// Entity* ball_ent = _scene->addStaticEntity(
+	// 			icosa_model_id,
+	// 			_default_material_id,
+	// 			icosa_pos,
+	// 			glm::vec3(0.0f), // rotation
+	// 			1.0f); // scale
+	// // set up icosahedron collision
+	// ball_ent->collision.type = Collision::Type::sphere;
+	// ball_ent->collision.shape.sphere.radius = 1.0f;
+	// ball_ent->collision.shape.sphere.center_start = icosa_pos;
+
+	PlayableEntity& player = _scene->getPlayer();
+
+	util::log("adding the pointer, which indicates where force is being applied");
+	// add pointer model
+	glm::vec3 player_force_pointer_color{1.0f, 0.0f, 0.0f};
+	Model player_force_pointer_model = Model::createIcosahedron(player_force_pointer_color);
+	player_force_pointer_model = subdivide(player_force_pointer_model, player_force_pointer_color);
+	glm::vec3 player_force_pointer_pos = player.getEntity().position + player.eye_offset;
+	ModelID player_force_pointer_model_id = uploadModel(player_force_pointer_model);
+	Entity* player_force_pointer_ent = _scene->addStaticEntity(
+				player_force_pointer_model_id,
+				_default_material_id,
+				player_force_pointer_pos,
+				glm::vec3(0.0f), // rotation
+				0.01f); // scale
+	player.pointer_ent_id = _scene->static_entities.size() - 1;
+
+	// set up the beam for the player beam gun
+	{
+		glm::vec3 beam_dims{0.5f, 0.5f, 5.0f};
+		Model beam_model = Model::createHexahedron(
+				beam_dims.x,
+				beam_dims.y,
+				beam_dims.z,
+				glm::vec3(0.0f, 1.0f, 0.0f));
+		ModelID beam_model_id = uploadModel(beam_model);
+		player.beam_model_id = beam_model_id;
+	}
+}
+
+const bool Engine::loadLevelFile(const std::string& level_filename) const {
+	std::ifstream level_file(level_filename);
+	Level level = Level::loadFromFile(level_filename);
+
+	if (!level.is_valid) {
+		util::logError("level %s is not valid", level_filename.c_str());
+		return false;
+	}
+
+	// **************************************************************************
+	// set up static objects
+	// **************************************************************************
 	for (const auto& platform : level.platforms) {
 		ModelID model_id = uploadModel(platform.model);
 
 		Entity* ent = _scene->addStaticEntity(
 				model_id,
-				default_material_id,
+				_default_material_id,
 				platform.position,
 				glm::vec3(0.0f), // rotation
 				1.0f); // scale
@@ -79,7 +139,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 		PlayableEntity* playable_ent = _scene->addPlayableEntity(
 				model_id,
-				default_material_id,
+				_default_material_id,
 				fighter.position,
 				fighter.rotation,
 				1.0f, // scale
@@ -94,66 +154,9 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 
 	_scene->player_entity_index = player_fighter_num;
 
-	// **************************************************************************
-	// set up misc stuff
-	// **************************************************************************
-	// // add building model
-	// Model model = Model::createFromOBJ("assets/", "large_buildingE.obj");
-	// glm::vec3 building_pos{10.0f, 0.0f, -10.0f};
-	// ModelID model_id = uploadModel(model);
-	// _scene->addStaticEntity(
-	// 			model_id,
-	// 			default_material_id,
-	// 			building_pos,
-	// 			glm::vec3(0.0f), // rotation
-	// 			1.0f); // scale
-
-	// // add icosahedron model
-	// Model icosa_model = Model::createIcosahedron();
-	// icosa_model = subdivide(icosa_model);
-	// glm::vec3 icosa_pos{0.0, 2.0, -5.0};
-	// ModelID icosa_model_id = uploadModel(icosa_model);
-	// Entity* ball_ent = _scene->addStaticEntity(
-	// 			icosa_model_id,
-	// 			default_material_id,
-	// 			icosa_pos,
-	// 			glm::vec3(0.0f), // rotation
-	// 			1.0f); // scale
-	// // set up icosahedron collision
-	// ball_ent->collision.type = Collision::Type::sphere;
-	// ball_ent->collision.shape.sphere.radius = 1.0f;
-	// ball_ent->collision.shape.sphere.center_start = icosa_pos;
-
-	PlayableEntity& player = _scene->getPlayer();
-
-	util::log("adding the pointer, which indicates where force is being applied");
-	// add pointer model
-	glm::vec3 player_force_pointer_color{1.0f, 0.0f, 0.0f};
-	Model player_force_pointer_model = Model::createIcosahedron(player_force_pointer_color);
-	player_force_pointer_model = subdivide(player_force_pointer_model, player_force_pointer_color);
-	glm::vec3 player_force_pointer_pos = player.getEntity().position + player.eye_offset;
-	ModelID player_force_pointer_model_id = uploadModel(player_force_pointer_model);
-	Entity* player_force_pointer_ent = _scene->addStaticEntity(
-				player_force_pointer_model_id,
-				default_material_id,
-				player_force_pointer_pos,
-				glm::vec3(0.0f), // rotation
-				0.01f); // scale
-	player.pointer_ent_id = _scene->static_entities.size() - 1;
-
 	util::log("successfully loaded level %s", level_filename.c_str());
 
-	// set up the beam for the player beam gun
-	{
-		glm::vec3 beam_dims{0.5f, 0.5f, 5.0f};
-		Model beam_model = Model::createHexahedron(
-				beam_dims.x,
-				beam_dims.y,
-				beam_dims.z,
-				glm::vec3(0.0f, 1.0f, 0.0f));
-		ModelID beam_model_id = uploadModel(beam_model);
-		player.beam_model_id = beam_model_id;
-	}
+	setUpExperimentalGarbage();
 
 	return true;
 }
