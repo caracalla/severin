@@ -77,9 +77,9 @@ struct PlayableEntity {
 	const glm::vec3 eyePosition() const;
 
 	void moveFromInputs(
-    const float dt_sec,
-    const Input::ButtonStates button_states,
-    const Input::MouseState mouse_state);
+		const float dt_sec,
+		const Input::ButtonStates button_states,
+		const Input::MouseState mouse_state);
 
 	// placeholder actions
 	void shootBall(const float dt_sec); // shoots a colliding ball

@@ -17,9 +17,9 @@ struct Vertex {
 };
 
 struct Model {
-  std::vector<Vertex> vertices;
+	std::vector<Vertex> vertices;
 
-  static Model createTriangle(); // returns a basic rainbow triangle
+	static Model createTriangle(); // returns a basic rainbow triangle
 	static Model createHexahedron( // build a box
 			float width,
 			float height,
