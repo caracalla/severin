@@ -102,19 +102,19 @@ void PlayableEntity::moveFromInputs(
 		const Input::ButtonStates button_states,
 		const Input::MouseState mouse_state) {
 	// apply mouse movement to rotation
-	// this is the main reason I use Euler angles
-	view_rotation.x += mouse_state.yOffset; // rotation about x axis
-	view_rotation.y += mouse_state.xOffset; // rotation about y axis
+	// I could probably change this to axis angle as well, but it seems tricky
+	view_rotation_euler.x += mouse_state.yOffset; // rotation about x axis
+	view_rotation_euler.y += mouse_state.xOffset; // rotation about y axis
 
 	// prevent breaking spine
 	float max_x_angle = glm::half_pi<float>();
-	view_rotation.x = std::clamp(view_rotation.x, -max_x_angle, max_x_angle);
+	view_rotation_euler.x = std::clamp(view_rotation_euler.x, -max_x_angle, max_x_angle);
 
 	// the sign is flipped when dealing with world space
-	float rotationAboutX = -view_rotation.x;
-	float rotationAboutY = -view_rotation.y;
+	float rotationAboutX = -view_rotation_euler.x;
+	float rotationAboutY = -view_rotation_euler.y;
 
-	glm::vec3 new_rotation_euler = glm::vec3(-view_rotation.x, -view_rotation.y, 0.0f);
+	glm::vec3 new_rotation_euler = glm::vec3(-view_rotation_euler.x, -view_rotation_euler.y, 0.0f);
 
 	// apply key states to velocity
 	glm::vec3 desired_direction{0.0f};

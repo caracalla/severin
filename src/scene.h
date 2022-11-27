@@ -46,7 +46,7 @@ struct PlayableEntity {
 	DynamicEntityID dynamic_ent_id;
 	Scene* scene; // ugh I don't like doing this yet again
 	glm::vec3 eye_offset; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
-	glm::vec3 view_rotation; // euler
+	glm::vec3 view_rotation_euler; // I think it's just easier to keep this Euler for now (see moveFromInputs impl)
 	ModelID projectile_model_id;
 	ModelID beam_model_id;
 	float cooldown_remaining = 0.0f;
@@ -62,12 +62,12 @@ struct PlayableEntity {
 			DynamicEntityID dynamic_ent_id,
 			Scene* scene,
 			glm::vec3 eye_offset,
-			glm::vec3 view_rotation,
+			glm::vec3 view_rotation_euler,
 			ModelID projectile_model_id) :
 					dynamic_ent_id(dynamic_ent_id),
 					scene(scene),
 					eye_offset(eye_offset),
-					view_rotation(view_rotation),
+					view_rotation_euler(view_rotation_euler),
 					projectile_model_id(projectile_model_id) {}
 
 	DynamicEntity& getEntity();
@@ -90,9 +90,9 @@ struct PlayableEntity {
 		constexpr glm::vec4 kDefaultView{0.0, 0.0, -1.0f, 0.0f};
 
 		glm::mat4 direction_rotation =
-				glm::rotate(glm::mat4(1.0f), -view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+				glm::rotate(glm::mat4(1.0f), -view_rotation_euler.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		direction_rotation =
-				glm::rotate(direction_rotation, -view_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+				glm::rotate(direction_rotation, -view_rotation_euler.x, glm::vec3(1.0f, 0.0f, 0.0f));
 
 		return glm::vec3(direction_rotation * kDefaultView);
 	}
@@ -182,14 +182,15 @@ struct Scene {
 
 		if (third_person_cam) {
 			glm::vec3 camera_position = Camera::kDefaultPosition;
-			glm::mat4 rotation =
-					glm::rotate(glm::mat4(1.0f), -player.view_rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-			rotation = glm::rotate(rotation, -player.view_rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-			camera_position = glm::vec3(rotation * glm::vec4(camera_position, 1.0f));
-			camera.update(player_ent.position + camera_position, player.view_rotation);
+			// glm::mat4 rotation =
+			// 		glm::rotate(glm::mat4(1.0f), -player.view_rotation_euler.y, glm::vec3(0.0f, 1.0f, 0.0f));
+			// rotation = glm::rotate(rotation, -player.view_rotation_euler.x, glm::vec3(1.0f, 0.0f, 0.0f));
+			// camera_position = glm::vec3(rotation * glm::vec4(camera_position, 1.0f));
+			// camera.update(player_ent.position + camera_position, player.view_rotation_euler);
+			camera.update(camera_position, Camera::kDefaultRotation);
 		} else {
 			glm::vec3 camera_position = player.eyePosition();
-			camera.update(camera_position, player.view_rotation);
+			camera.update(camera_position, player.view_rotation_euler);
 		}
 	}
 
@@ -237,7 +238,7 @@ struct Scene {
 				dynamic_entities.size() - 1,
 				this,
 				eye_offset,
-				rotation_euler, // view_rotation
+				rotation_euler, // view_rotation_euler
 				projectile_model_id);
 		
 		return &(playable_entities.back());
