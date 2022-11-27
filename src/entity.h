@@ -19,9 +19,11 @@ struct Entity { // 64 bytes total
 	uint16_t material_id; // identifier for shading
 	// for now, position is basically the circumcenter of the object
 	glm::vec3 position; // 12 bytes
+	// replace (currently Euler angles) rotation with axis-angle
+	// do this because the way I'm currently handling rotations is broken
 	glm::vec3 rotation; // 12 bytes
 	float scale = 1.0f; // 4 bytes
-	Collision collision; // 32 bytes
+	Collision collision; // 28 bytes
 
 	Entity(
 			ModelID mesh_id,

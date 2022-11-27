@@ -51,6 +51,7 @@ struct PlayableEntity {
 	ModelID beam_model_id;
 	float cooldown_remaining = 0.0f;
 	StaticEntityID pointer_ent_id;
+	StaticEntityID beam_gun_ent_id;
 
 	static constexpr float kMaxWalkSpeed = 2.0f; // meters per second
 	static constexpr float kSprintFactor = 3.0f;
@@ -71,6 +72,7 @@ struct PlayableEntity {
 
 	DynamicEntity& getEntity();
 	Entity& getPointerEntity();
+	Entity& getBeamGunEntity();
 
 	const glm::vec3 eyePosition() const;
 

@@ -88,6 +88,27 @@ void Engine::setUpExperimentalGarbage() const {
 		ModelID beam_model_id = uploadModel(beam_model);
 		player.beam_model_id = beam_model_id;
 	}
+
+	// set up the beam gun (it's a static entity, which will be moved by player logic)
+	// will replace this with a "real" model soon
+	{
+		glm::vec3 beam_gun_pos{}; // fix me
+
+		glm::vec3 beam_gun_dims{0.2f, 0.2f, 1.0f};
+		Model beam_gun_model = Model::createHexahedron(
+				beam_gun_dims.x,
+				beam_gun_dims.y,
+				beam_gun_dims.z,
+				glm::vec3(0.0f, 0.0f, 1.0f));
+		ModelID beam_gun_model_id = uploadModel(beam_gun_model);
+		Entity* beam_gun_model_ent = _scene->addStaticEntity(
+				beam_gun_model_id,
+				_default_material_id,
+				beam_gun_pos,
+				glm::vec3(0.0f), // rotation
+				1.0f); // scale
+	player.beam_gun_ent_id = _scene->static_entities.size() - 1;
+	}
 }
 
 const bool Engine::loadLevelFile(const std::string& level_filename) const {

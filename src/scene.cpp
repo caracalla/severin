@@ -11,6 +11,11 @@ Entity& PlayableEntity::getPointerEntity() {
 }
 
 
+Entity& PlayableEntity::getBeamGunEntity() {
+  return scene->getStaticEntity(beam_gun_ent_id);
+}
+
+
 const glm::vec3 PlayableEntity::eyePosition() const {
   DynamicEntity& player_ent = scene->getDynamicEntity(dynamic_ent_id);
   return player_ent.position + eye_offset;
@@ -73,10 +78,6 @@ void PlayableEntity::shootBeam(const float dt_sec) {
 
   cooldown_remaining = kWeaponCooldownSec / 1.0f;
 
-	glm::vec3 rotation = view_rotation * -1.0f;
-	rotation.y = 0.0f;
-	rotation.z = 0.0f;
-
 	// need to get rotation between two vectors:
 	// * the default direction of the projectile <0, 0, 1>
 	// * the desired direction (initially viewDirection, later velocity)
@@ -85,10 +86,12 @@ void PlayableEntity::shootBeam(const float dt_sec) {
   DynamicEntity* beam = scene->addDynamicEntity(
       beam_model_id,
       0,
-      eyePosition(), // player_ent.position,
+      player_ent.position, // eyePosition(),
       util::rotationBetweenTwoVectors(
 					beam_neutral_direction,
 					util::safeNormalize(viewDirection())),
+			// this should just work with axis-angle I think, but I'm really not sure
+			// view_rotation * -1.0f,
       0.2f,
       0.0f);
   beam->initCollision(0.12f);
@@ -98,6 +101,7 @@ void PlayableEntity::shootBeam(const float dt_sec) {
   beam->setPostAction([](DynamicEntity* self, const float dt_sec) {
     if (self->didCollide()) {
 			glm::vec3 new_direction = util::safeNormalize(self->velocity);
+			// this is what would benefit most from axis-angle
 			self->rotation = util::rotationBetweenTwoVectors(beam_neutral_direction, new_direction);
     }
   });
@@ -109,6 +113,7 @@ void PlayableEntity::moveFromInputs(
     const Input::ButtonStates button_states,
     const Input::MouseState mouse_state) {
   // apply mouse movement to rotation
+  // this is the main reason I use Euler angles
   view_rotation.x += mouse_state.yOffset; // rotation about x axis
   view_rotation.y += mouse_state.xOffset; // rotation about y axis
 
@@ -218,4 +223,10 @@ void PlayableEntity::moveFromInputs(
   }
 
   applyForceOnBox(button_states.action);
+
+  // move weapon
+  Entity& weapon = getBeamGunEntity();
+  weapon.position = ent.position;
+  weapon.rotation.x = -view_rotation.x;
+  weapon.rotation.y = -view_rotation.y;
 }
