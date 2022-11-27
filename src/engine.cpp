@@ -22,7 +22,7 @@ void Engine::setUpExperimentalGarbage() const {
 				model_id,
 				_default_material_id,
 				pos,
-				glm::vec3(0.0f), // rotation_euler
+				AxisAngle{},
 				1.0f); // scale
 		ent->collision.type = Collision::Type::aabb;
 		ent->collision.shape.box.min_pos = pos - dims / 2.0f;
@@ -41,7 +41,7 @@ void Engine::setUpExperimentalGarbage() const {
 	// 			model_id,
 	// 			_default_material_id,
 	// 			building_pos,
-	// 			glm::vec3(0.0f), // rotation_euler
+	// 			AxisAngle{},
 	// 			1.0f); // scale
 
 	// // add icosahedron model
@@ -53,7 +53,7 @@ void Engine::setUpExperimentalGarbage() const {
 	// 			icosa_model_id,
 	// 			_default_material_id,
 	// 			icosa_pos,
-	// 			glm::vec3(0.0f), // rotation_euler
+	// 			AxisAngle{},
 	// 			1.0f); // scale
 	// // set up icosahedron collision
 	// ball_ent->collision.type = Collision::Type::sphere;
@@ -73,7 +73,7 @@ void Engine::setUpExperimentalGarbage() const {
 				player_force_pointer_model_id,
 				_default_material_id,
 				player_force_pointer_pos,
-				glm::vec3(0.0f), // rotation_euler
+				AxisAngle{},
 				0.01f); // scale
 	player.pointer_ent_id = _scene->static_entities.size() - 1;
 
@@ -105,7 +105,7 @@ void Engine::setUpExperimentalGarbage() const {
 				beam_gun_model_id,
 				_default_material_id,
 				beam_gun_pos,
-				glm::vec3(0.0f), // rotation_euler
+				AxisAngle{},
 				1.0f); // scale
 	player.beam_gun_ent_id = _scene->static_entities.size() - 1;
 	}
@@ -130,7 +130,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 				model_id,
 				_default_material_id,
 				platform.position,
-				glm::vec3(0.0f), // rotation_euler
+				AxisAngle{},
 				1.0f); // scale
 		ent->collision.type = Collision::Type::aabb;
 		ent->collision.shape.box.min_pos = platform.start_pos;
@@ -162,7 +162,7 @@ const bool Engine::loadLevelFile(const std::string& level_filename) const {
 				model_id,
 				_default_material_id,
 				fighter.position,
-				fighter.rotation, // rotation_euler
+				fighter.rotation, // rotation_euler (due to view rotation)
 				1.0f, // scale
 				fighter_mass,
 				fighter_eye_offset,

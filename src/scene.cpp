@@ -35,7 +35,7 @@ void PlayableEntity::shootBall(const float dt_sec) {
 			projectile_model_id,
 			0,
 			player_ent.position,
-			player_ent.rotation_euler,
+			player_ent.rotation,
 			0.2f,
 			0.0f);
 	projectile->initCollision(0.12f);
@@ -68,8 +68,6 @@ void PlayableEntity::applyForceOnBox(bool is_active) {
 }
 
 
-constexpr glm::vec3 beam_neutral_direction{0.0f, 0.0f, -1.0f};
-
 void PlayableEntity::shootBeam(const float dt_sec) {
 	if (cooldown_remaining > 0.0f) {
 		cooldown_remaining -= dt_sec;
@@ -78,20 +76,12 @@ void PlayableEntity::shootBeam(const float dt_sec) {
 
 	cooldown_remaining = kWeaponCooldownSec / 1.0f;
 
-	// need to get rotation between two vectors:
-	// * the default direction of the projectile <0, 0, -1>
-	// * the desired direction (initially viewDirection, later velocity)
-	glm::vec3 new_direction = util::safeNormalize(viewDirection());
-	glm::vec3 axis = util::safeNormalize(glm::cross(beam_neutral_direction, new_direction));
-	float angle = acos(glm::dot(beam_neutral_direction, new_direction));
-
 	DynamicEntity& player_ent = getEntity();
 	DynamicEntity* beam = scene->addDynamicEntity(
 			beam_model_id,
 			0,
 			player_ent.position, // eyePosition(),
-			axis,
-			angle,
+			AxisAngle::fromDirection(viewDirection()),
 			0.2f,
 			0.0f);
 	beam->initCollision(0.12f);
@@ -101,8 +91,7 @@ void PlayableEntity::shootBeam(const float dt_sec) {
 	beam->setPostAction([](DynamicEntity* self, const float dt_sec) {
 		if (self->didCollide()) {
 			glm::vec3 new_direction = util::safeNormalize(self->velocity);
-			self->rotation_axis = util::safeNormalize(glm::cross(beam_neutral_direction, new_direction));
-			self->rotation_angle = acos(glm::dot(beam_neutral_direction, new_direction));
+			self->rotation = AxisAngle::fromDirection(new_direction);
 		}
 	});
 }
@@ -124,6 +113,8 @@ void PlayableEntity::moveFromInputs(
 	// the sign is flipped when dealing with world space
 	float rotationAboutX = -view_rotation.x;
 	float rotationAboutY = -view_rotation.y;
+
+	glm::vec3 new_rotation_euler = glm::vec3(-view_rotation.x, -view_rotation.y, 0.0f);
 
 	// apply key states to velocity
 	glm::vec3 desired_direction{0.0f};
@@ -180,8 +171,8 @@ void PlayableEntity::moveFromInputs(
 		} else {
 			// we'll use desired_direction, let's prepare it
 			glm::mat4 y_rotation =
-					glm::rotate(glm::mat4(1.0f), rotationAboutY, glm::vec3(0.0f, 1.0f, 0.0f));
-			desired_direction = glm::vec3(y_rotation * glm::vec4(desired_direction, 1.0f));
+					glm::rotate(glm::mat4(1.0f), new_rotation_euler.y, glm::vec3(0.0f, 1.0f, 0.0f));
+			desired_direction = glm::vec3(y_rotation * glm::vec4(desired_direction, 0.0f));
 			desired_direction = glm::normalize(desired_direction);
 
 			if (!is_already_moving) {
@@ -218,7 +209,8 @@ void PlayableEntity::moveFromInputs(
 	}
 
 	// player model should only rotate about the y axis
-	ent.rotation_euler.y = rotationAboutY;
+	glm::vec3 player_rotation_euler = glm::vec3(0.0f, new_rotation_euler.y, 0.0f);
+	ent.rotation = AxisAngle::fromEulerAngles(player_rotation_euler);
 
 	// action stuff
 	if (button_states.action) {
@@ -233,6 +225,5 @@ void PlayableEntity::moveFromInputs(
 	weapon.position = ent.position;
 
 	// actually uses x axis rotation as well as y
-	weapon.rotation_euler.x = rotationAboutX;
-	weapon.rotation_euler.y = rotationAboutY;
+	weapon.rotation = AxisAngle::fromEulerAngles(new_rotation_euler);
 }

@@ -21,6 +21,8 @@ bin/severin
 8. `severin.exe`
 
 ## TODO
+* transition to quaternions
+  * currently, all entities use axis-angle rotational representation, except for the player and any items associated with it (i.e. weapons)
 * make a MaterialID alias for uint16_t
 * un-inherit entities from each other
 * make EntityManager

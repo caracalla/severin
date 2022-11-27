@@ -83,7 +83,7 @@ void util::logFrameStats(std::chrono::microseconds last_frame_duration) {
 	}
 }
 
-bool util::shouldLog() {
+const bool util::shouldLog() {
 	return should_log;
 }
 
@@ -96,17 +96,17 @@ void util::init() {
 	mt = std::mt19937(rd());
 }
 
-float util::randomFloat(float lower_bound, float upper_bound) {
+const float util::randomFloat(float lower_bound, float upper_bound) {
 	std::uniform_real_distribution<float> dist(lower_bound, upper_bound);
 
 	return dist(mt);
 }
 
-int util::randomInt(int lower_bound, int upper_bound) {
+const int util::randomInt(int lower_bound, int upper_bound) {
 	return (int)randomFloat(lower_bound, upper_bound);
 }
 
-void util::logVec3(glm::vec3 vec, const char* fmt, ...) {
+void util::logVec3(const glm::vec3& vec, const char* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	printf("INFO: ");
@@ -117,7 +117,7 @@ void util::logVec3(glm::vec3 vec, const char* fmt, ...) {
 	printf("%f, %f, %f\n", vec.x, vec.y, vec.z);
 }
 
-void util::logMat4(glm::mat4 mat, const char* fmt, ...) {
+void util::logMat4(const glm::mat4& mat, const char* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	printf("INFO: ");
@@ -131,7 +131,11 @@ void util::logMat4(glm::mat4 mat, const char* fmt, ...) {
 	printf("    %f, %f, %f, %f\n", mat[3].x, mat[3].y, mat[3].y, mat[3].w);
 }
 
-float util::getElapsedTime() {
+void util::logAxisAngle(const AxisAngle& aa) {
+	logVec3(aa.axis, "angle: %f, axis: ", aa.angle);
+}
+
+const float util::getElapsedTime() {
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -140,14 +144,41 @@ float util::getElapsedTime() {
 			currentTime - startTime).count();
 }
 
-bool util::areVectorsEqual(glm::vec3 v1, glm::vec3 v2) {
+const bool util::areVectorsEqual(const glm::vec3& v1, const glm::vec3& v2) {
 	return glm::all(glm::epsilonEqual(v1, v2, kEpsilon));
 }
 
-bool util::isVectorZero(glm::vec3 vec) {
+const bool util::isVectorZero(const glm::vec3& vec) {
 	return areVectorsEqual(glm::vec3(0.0f), vec);
 }
 
-glm::vec3 util::safeNormalize(glm::vec3 vec) {
+glm::vec3 util::safeNormalize(const glm::vec3& vec) {
 	return isVectorZero(vec) ? vec : glm::normalize(vec);
+}
+
+AxisAngle AxisAngle::fromDirection(const glm::vec3& new_direction) {
+	AxisAngle result;
+	result.axis = util::safeNormalize(glm::cross(util::neutral_direction, new_direction));
+	result.angle = acos(glm::dot(util::neutral_direction, new_direction));
+	return result;
+}
+
+AxisAngle AxisAngle::fromEulerAngles(const glm::vec3& euler_angles) {
+	glm::mat4 rotation_matrix = glm::rotate(
+			glm::rotate(
+					glm::rotate(
+							glm::mat4(1.0f),
+							euler_angles.y,
+							glm::vec3(0.0f, 1.0f, 0.0f)),
+					euler_angles.x,
+					glm::vec3(1.0f, 0.0f, 0.0f)),
+			euler_angles.z,
+			glm::vec3(0.0f, 0.0f, 1.0f));
+
+	glm::vec3 new_direction = glm::vec3(rotation_matrix * glm::vec4(util::neutral_direction, 0.0f));
+	return AxisAngle::fromDirection(new_direction);
+}
+
+void AxisAngle::log() {
+	util::logAxisAngle(*this);
 }
