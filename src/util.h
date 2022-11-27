@@ -26,7 +26,4 @@ namespace util {
 	bool areVectorsEqual(glm::vec3 v1, glm::vec3 v2);
 	bool isVectorZero(glm::vec3 vec);
 	glm::vec3 safeNormalize(glm::vec3 vec);
-
-	// inputs must be normalized!
-	glm::vec3 rotationBetweenTwoVectors(glm::vec3 v1, glm::vec3 v2);
 }

@@ -29,12 +29,12 @@ struct Camera {
 		update(kDefaultPosition, kDefaultRotation);
 	}
 
-	void update(const glm::vec3& position, const glm::vec3& rotation) {
+	void update(const glm::vec3& position, const glm::vec3& rotation_euler) {
 		glm::vec3 adjusted_pos = position * -1.0f; // coordinate axes are basically reversed
 
 		view = glm::mat4(1.0f);
-		view = glm::rotate(view, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::rotate(view, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		view = glm::rotate(view, rotation_euler.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		view = glm::rotate(view, rotation_euler.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		view = glm::translate(view, adjusted_pos);
 	}
 };
@@ -46,7 +46,7 @@ struct PlayableEntity {
 	DynamicEntityID dynamic_ent_id;
 	Scene* scene; // ugh I don't like doing this yet again
 	glm::vec3 eye_offset; // relative to model origin point, should be scale and rotation aware I guess (right now only y component is used)
-	glm::vec3 view_rotation;
+	glm::vec3 view_rotation; // euler
 	ModelID projectile_model_id;
 	ModelID beam_model_id;
 	float cooldown_remaining = 0.0f;
@@ -197,9 +197,21 @@ struct Scene {
 			const ModelID mesh_id,
 			const uint16_t material_id,
 			glm::vec3 position,
-			glm::vec3 rotation,
+			glm::vec3 rotation_euler,
 			float scale) {
-		static_entities.emplace_back(mesh_id, material_id, position, rotation, scale);
+		static_entities.emplace_back(mesh_id, material_id, position, rotation_euler, scale);
+
+		return &(static_entities.back());
+	}
+
+	Entity* addStaticEntity(
+			const ModelID mesh_id,
+			const uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation_axis,
+			float rotation_angle,
+			float scale) {
+		static_entities.emplace_back(mesh_id, material_id, position, rotation_axis, rotation_angle, scale);
 
 		return &(static_entities.back());
 	}
@@ -208,10 +220,23 @@ struct Scene {
 			const ModelID mesh_id,
 			const uint16_t material_id,
 			glm::vec3 position,
-			glm::vec3 rotation,
+			glm::vec3 rotation_euler,
 			float scale,
 			float mass) {
-		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation, scale, mass);
+		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation_euler, scale, mass);
+
+		return &(dynamic_entities.back());
+	}
+
+	DynamicEntity* addDynamicEntity(
+			const ModelID mesh_id,
+			const uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation_axis,
+			float rotation_angle,
+			float scale,
+			float mass) {
+		dynamic_entities.emplace_back(mesh_id, material_id, position, rotation_axis, rotation_angle, scale, mass);
 
 		return &(dynamic_entities.back());
 	}
@@ -220,7 +245,7 @@ struct Scene {
 			const ModelID mesh_id,
 			const uint16_t material_id,
 			glm::vec3 position,
-			glm::vec3 rotation,
+			glm::vec3 rotation_euler,
 			float scale,
 			float mass,
 			glm::vec3 eye_offset,
@@ -229,7 +254,7 @@ struct Scene {
 				mesh_id,
 				material_id,
 				position,
-				rotation,
+				rotation_euler,
 				scale,
 				mass);
 
@@ -237,7 +262,7 @@ struct Scene {
 				dynamic_entities.size() - 1,
 				this,
 				eye_offset,
-				rotation,
+				rotation_euler,
 				projectile_model_id);
 		
 		return &(playable_entities.back());

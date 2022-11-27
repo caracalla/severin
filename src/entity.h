@@ -21,21 +21,65 @@ struct Entity { // 64 bytes total
 	glm::vec3 position; // 12 bytes
 	// replace (currently Euler angles) rotation with axis-angle
 	// do this because the way I'm currently handling rotations is broken
-	glm::vec3 rotation; // 12 bytes
+	glm::vec3 rotation_euler; // 12 bytes
+	glm::vec3 rotation_axis; // 12 bytes
+	float rotation_angle;
 	float scale = 1.0f; // 4 bytes
 	Collision collision; // 28 bytes
+	bool use_euler = false;
 
 	Entity(
 			ModelID mesh_id,
 			uint16_t material_id,
 			glm::vec3 position, // no restriction currently on where an entity's "position" is: for most things, it's the absolute center, but for the player, it's at the bottom
-			glm::vec3 rotation,
+			glm::vec3 rotation_euler,
 			float scale) :
 					mesh_id(mesh_id),
 					material_id(material_id),
 					position(position),
-					rotation(rotation),
-					scale(scale) {}
+					rotation_euler(rotation_euler),
+					scale(scale),
+					use_euler(true) {}
+
+	Entity(
+			ModelID mesh_id,
+			uint16_t material_id,
+			glm::vec3 position, // no restriction currently on where an entity's "position" is: for most things, it's the absolute center, but for the player, it's at the bottom
+			glm::vec3 rotation_axis,
+			float rotation_angle,
+			float scale) :
+					mesh_id(mesh_id),
+					material_id(material_id),
+					position(position),
+					rotation_axis(rotation_axis),
+					rotation_angle(rotation_angle),
+					scale(scale),
+					use_euler(false) {}
+
+	const glm::mat4 getModelMatrix() const {
+		glm::mat4 model_matrix = glm::mat4(1.0f);
+
+		if (use_euler) {
+			return glm::scale(
+					glm::rotate(
+							glm::rotate(
+									glm::rotate(
+											glm::translate(model_matrix, position),
+											rotation_euler.y,
+											glm::vec3(0.0f, 1.0f, 0.0f)),
+									rotation_euler.x,
+									glm::vec3(1.0f, 0.0f, 0.0f)),
+							rotation_euler.z,
+							glm::vec3(0.0f, 0.0f, 1.0f)),
+					glm::vec3(scale));
+		} else {
+			return glm::scale(
+					glm::rotate(glm::translate(model_matrix, position), rotation_angle, rotation_axis),
+					glm::vec3(scale));
+		}
+
+		return model_matrix;
+	}
 };
 
 
@@ -61,9 +105,18 @@ struct DynamicEntity : public Entity {
 			ModelID mesh_id,
 			uint16_t material_id,
 			glm::vec3 position,
-			glm::vec3 rotation,
+			glm::vec3 rotation_euler,
 			float scale,
-			float mass) : Entity(mesh_id, material_id, position, rotation, scale), mass(mass) {}
+			float mass) : Entity(mesh_id, material_id, position, rotation_euler, scale), mass(mass) {}
+
+	DynamicEntity(
+			ModelID mesh_id,
+			uint16_t material_id,
+			glm::vec3 position,
+			glm::vec3 rotation_axis,
+			float rotation_angle,
+			float scale,
+			float mass) : Entity(mesh_id, material_id, position, rotation_axis, rotation_angle, scale), mass(mass) {}
 
 	void initCollision(const float radius) {
 		// always a sphere for now

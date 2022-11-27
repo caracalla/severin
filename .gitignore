@@ -1,6 +1,6 @@
 /bin
-/.DS_Store
 /.vscode
+*.DS_Store
 
 CMakeCache.txt
 CMakeFiles
